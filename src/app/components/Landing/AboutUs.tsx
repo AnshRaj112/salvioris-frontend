@@ -13,16 +13,19 @@ import {
         icon: MessageCircle,
         title: "Secure Chat & Video",
         description: "Connect with therapists through encrypted messaging and video calls",
+        comingSoon: true,
       },
       {
         icon: Shield,
         title: "Verified Therapists",
         description: "All professionals are licensed and background-checked",
+        comingSoon: true,
       },
       {
         icon: Clock,
         title: "Real-Time Support",
         description: "Get help when you need it with 24/7 availability",
+        comingSoon: true,
       },
       {
         icon: BookOpen,
@@ -49,19 +52,22 @@ import {
      {features.map((feature) => {
        const IconComponent = feature.icon;
        return (
-       <Card key={feature.title} className={styles.featureCard}>
-         <CardContent className={styles.featureCardContent}>
-           <div className={styles.iconWrapper}>
-             <IconComponent className={styles.icon} />
-           </div>
-           <h3 className={styles.featureTitle}>
-             {feature.title}
-           </h3>
-           <p className={styles.featureDescription}>
-             {feature.description}
-           </p>
-         </CardContent>
-       </Card>
+      <Card key={feature.title} className={`${styles.featureCard} ${feature.comingSoon ? styles.comingSoonCard : ''}`}>
+        {feature.comingSoon && (
+          <div className={styles.comingSoonBadge}>Coming Soon</div>
+        )}
+        <CardContent className={styles.featureCardContent}>
+          <div className={styles.iconWrapper}>
+            <IconComponent className={styles.icon} />
+          </div>
+          <h3 className={styles.featureTitle}>
+            {feature.title}
+          </h3>
+          <p className={styles.featureDescription}>
+            {feature.description}
+          </p>
+        </CardContent>
+      </Card>
      )})}
    </div>
  </div>

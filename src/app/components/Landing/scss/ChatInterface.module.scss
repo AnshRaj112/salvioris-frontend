@@ -2,6 +2,31 @@
   padding-bottom: 5rem;
   background: #1d2935;
   width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.comingSoonSection {
+  position: relative;
+}
+
+.comingSoonBadge {
+  position: absolute;
+  top: 25px;
+  right: -30px;
+  background: linear-gradient(135deg, #ff4444, #ff6666, #ff3333);
+  color: white;
+  padding: 4px 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.5),
+              0 0 12px rgba(255, 68, 68, 0.3);
+  z-index: 10;
+  animation: pulseBadge 2s ease-in-out infinite;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .container {
@@ -49,6 +74,17 @@
   box-shadow: var(--shadow-floating);
   border: 1px solid hsl(var(--primary) / 0.2);
   overflow: hidden;
+}
+
+@keyframes pulseBadge {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(255, 68, 68, 0.5),
+                0 0 12px rgba(255, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(255, 68, 68, 0.7),
+                0 0 20px rgba(255, 68, 68, 0.5);
+  }
 }
 
 .chatHeader {
@@ -276,5 +312,16 @@
   color: hsl(var(--muted-foreground));
   margin-top: 0.5rem;
   text-align: center;
+}
+
+@keyframes pulseBadge {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(255, 68, 68, 0.5),
+                0 0 12px rgba(255, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(255, 68, 68, 0.7),
+                0 0 20px rgba(255, 68, 68, 0.5);
+  }
 }
 

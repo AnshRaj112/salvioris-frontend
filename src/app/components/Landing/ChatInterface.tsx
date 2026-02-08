@@ -47,7 +47,8 @@ const ChatInterface = () => {
   ];
 
   return (
-    <section className={styles.chatInterface}>
+    <section className={`${styles.chatInterface} ${styles.comingSoonSection}`}>
+      <div className={styles.comingSoonBadge}>Coming Soon</div>
       <div className={styles.container}>
         <div className={styles.header}>
           <h2 className={styles.title}>

@@ -509,5 +509,31 @@ export const api = {
     }
     return data;
   },
+
+  // Contact us routes
+  submitContact: async (data: { name: string; email: string; message: string }) => {
+    const response = await fetch(`${API_BASE_URL}/api/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData;
+  },
+
+  getContacts: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/contacts`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
 };
 

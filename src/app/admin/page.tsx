@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact } from "lucide-react";
 import styles from "./Admin.module.scss";
 
 interface Therapist {
@@ -43,6 +43,15 @@ interface Feedback {
   ip_address?: string;
 }
 
+interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  created_at: string;
+  ip_address?: string;
+}
+
 import { api } from "../lib/api";
 
 export default function AdminDashboard() {
@@ -50,11 +59,13 @@ export default function AdminDashboard() {
   const [approvedTherapists, setApprovedTherapists] = useState<Therapist[]>([]);
   const [blockedIPs, setBlockedIPs] = useState<BlockedIP[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingIPs, setIsLoadingIPs] = useState(false);
   const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback">("pending");
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact">("pending");
 
   useEffect(() => {
     fetchTherapists();
@@ -62,6 +73,8 @@ export default function AdminDashboard() {
       fetchBlockedIPs();
     } else if (activeTab === "feedback") {
       fetchFeedbacks();
+    } else if (activeTab === "contact") {
+      fetchContacts();
     }
   }, [activeTab]);
 
@@ -113,6 +126,21 @@ export default function AdminDashboard() {
       alert("Failed to fetch feedbacks");
     } finally {
       setIsLoadingFeedbacks(false);
+    }
+  };
+
+  const fetchContacts = async () => {
+    setIsLoadingContacts(true);
+    try {
+      const data = await api.getContacts();
+      if (data.success) {
+        setContacts(data.contacts || []);
+      }
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+      alert("Failed to fetch contacts");
+    } finally {
+      setIsLoadingContacts(false);
     }
   };
 
@@ -209,6 +237,13 @@ export default function AdminDashboard() {
             <MessageSquare className={styles.tabIcon} />
             Feedback ({feedbacks.length})
           </button>
+          <button
+            className={`${styles.tab} ${activeTab === "contact" ? styles.active : ""}`}
+            onClick={() => setActiveTab("contact")}
+          >
+            <Contact className={styles.tabIcon} />
+            Contact Us ({contacts.length})
+          </button>
         </div>
 
         {activeTab === "feedback" ? (
@@ -242,6 +277,54 @@ export default function AdminDashboard() {
                         <div className={styles.infoItem}>
                           <span className={styles.label}>IP Address:</span>
                           <span>{feedback.ip_address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        ) : activeTab === "contact" ? (
+          isLoadingContacts ? (
+            <div className={styles.loading}>Loading contacts...</div>
+          ) : contacts.length === 0 ? (
+            <div className={styles.emptyState}>
+              <Contact className={styles.emptyIcon} />
+              <p>No contact submissions found.</p>
+            </div>
+          ) : (
+            <div className={styles.feedbacksGrid}>
+              {contacts.map((contact) => (
+                <Card key={contact.id} className={styles.feedbackCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.cardTitle}>
+                      <Contact className={styles.icon} />
+                      Contact #{contact.id.slice(-6)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={styles.info}>
+                      <div className={styles.infoItem}>
+                        <User className={styles.infoIcon} />
+                        <span><strong>Name:</strong> {contact.name}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <Mail className={styles.infoIcon} />
+                        <span><strong>Email:</strong> {contact.email}</span>
+                      </div>
+                      <div className={styles.feedbackText}>
+                        <strong>Message:</strong>
+                        <p>{contact.message}</p>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.label}>Submitted:</span>
+                        <span>{new Date(contact.created_at).toLocaleString()}</span>
+                      </div>
+                      {contact.ip_address && (
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>IP Address:</span>
+                          <span>{contact.ip_address}</span>
                         </div>
                       )}
                     </div>

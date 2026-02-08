@@ -43,7 +43,8 @@ const therapists = [
 
 const TherapistGrid = () => {
   return (
-    <section className={styles.therapistGrid}>
+    <section className={`${styles.therapistGrid} ${styles.comingSoonSection}`}>
+      <div className={styles.comingSoonBadge}>Coming Soon</div>
       <div className={styles.container}>
         <div className={styles.header}>
           <h2 className={styles.title}>
