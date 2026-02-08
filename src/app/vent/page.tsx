@@ -12,8 +12,11 @@ import styles from "./Vent.module.scss";
 
 interface User {
   id: string;
-  name: string;
-  email: string;
+  username: string;
+  created_at?: string;
+  // Legacy support
+  name?: string;
+  email?: string;
 }
 
 export default function VentPage() {
@@ -330,7 +333,8 @@ export default function VentPage() {
           id: response.vent.id,
           message: response.vent.message,
           created_at: response.vent.created_at,
-          user_id: response.vent.user_id,
+          username: response.vent.username, // Anonymous username
+          user_id: response.vent.user_id, // Legacy support
         };
         // Add new message at the end (newest at bottom)
         setVents((prev) => [...prev, newVent]);
@@ -498,7 +502,7 @@ export default function VentPage() {
             </div>
             {isLoggedIn && (
               <div className={styles.userSection}>
-                <span className={styles.userName}>Welcome, {user?.name || 'User'}</span>
+                <span className={styles.userName}>Welcome, @{user?.username || user?.name || 'User'}</span>
                 <Button
                   variant="healing"
                   size="default"
@@ -565,6 +569,11 @@ export default function VentPage() {
 
             {vents.map((vent) => (
               <div key={vent.id} className={styles.message}>
+                {vent.username && (
+                  <div className={styles.messageAuthor}>
+                    @{vent.username}
+                  </div>
+                )}
                 <div className={styles.messageContent}>{vent.message}</div>
                 <div className={styles.messageTime}>
                   {new Date(vent.created_at).toLocaleString()}

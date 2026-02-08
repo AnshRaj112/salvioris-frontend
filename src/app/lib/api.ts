@@ -12,6 +12,43 @@ export interface ApiResponse<T> {
   token?: string;
 }
 
+// Privacy-first auth interfaces
+export interface PrivacySignupData {
+  username: string;
+  password: string;
+  recovery_email?: string;
+}
+
+export interface PrivacySigninData {
+  username: string;
+  password: string;
+}
+
+export interface CheckUsernameData {
+  username: string;
+}
+
+export interface CheckUsernameResponse {
+  success: boolean;
+  available: boolean;
+  username: string;
+  message: string;
+}
+
+export interface ForgotUsernameData {
+  recovery_email: string;
+}
+
+export interface ForgotPasswordData {
+  recovery_email: string;
+}
+
+export interface ResetPasswordData {
+  token: string;
+  new_password: string;
+}
+
+// Legacy interfaces (for backward compatibility)
 export interface UserSignupData {
   name: string;
   email: string;
@@ -84,7 +121,8 @@ export interface Vent {
   id: string;
   message: string;
   created_at: string;
-  user_id?: string;
+  username?: string; // Anonymous username only (privacy-first)
+  user_id?: string; // Legacy support
 }
 
 export interface CreateVentData {
@@ -140,7 +178,53 @@ async function apiRequest<T>(
 }
 
 export const api = {
-  // User auth
+  // Privacy-first auth (new endpoints)
+  privacySignup: (data: PrivacySignupData) =>
+    apiRequest('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  privacySignin: (data: PrivacySigninData) =>
+    apiRequest('/api/auth/signin', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  checkUsername: async (data: CheckUsernameData): Promise<CheckUsernameResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/check-username`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as CheckUsernameResponse;
+  },
+
+  forgotUsername: (data: ForgotUsernameData) =>
+    apiRequest('/api/auth/forgot-username', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  forgotPassword: (data: ForgotPasswordData) =>
+    apiRequest('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  resetPassword: (data: ResetPasswordData) =>
+    apiRequest('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Legacy user auth (for backward compatibility)
   userSignup: (data: UserSignupData) =>
     apiRequest('/api/auth/user/signup', {
       method: 'POST',

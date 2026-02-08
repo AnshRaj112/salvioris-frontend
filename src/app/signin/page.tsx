@@ -15,7 +15,7 @@ import styles from "./Signin.module.scss";
 export default function SigninPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -37,7 +37,7 @@ export default function SigninPage() {
     setError(null);
 
     try {
-      const response = await api.userSignin(formData);
+      const response = await api.privacySignin(formData);
       if (response.success) {
         // Store user data in localStorage
         localStorage.setItem("user", JSON.stringify(response.user));
@@ -124,15 +124,15 @@ export default function SigninPage() {
                     </div>
                   )}
                   <div className={styles.formGroup}>
-                    <label htmlFor="email" className={styles.label}>
-                      Email Address
+                    <label htmlFor="username" className={styles.label}>
+                      Username
                     </label>
                     <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={formData.email}
+                      id="username"
+                      name="username"
+                      type="text"
+                      placeholder="Enter your username"
+                      value={formData.username}
                       onChange={handleChange}
                       required
                       className={styles.input}
@@ -169,7 +169,10 @@ export default function SigninPage() {
                     </div>
                   </div>
 
-                  <div className={styles.forgotPassword}>
+                  <div className={styles.forgotLinks}>
+                    <Link href="/forgot-username" className={styles.forgotLink}>
+                      Forgot your username?
+                    </Link>
                     <Link href="/forgot-password" className={styles.forgotLink}>
                       Forgot your password?
                     </Link>
@@ -217,4 +220,3 @@ export default function SigninPage() {
     </div>
   );
 }
-

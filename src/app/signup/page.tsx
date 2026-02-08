@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { ArrowRight, Shield, Users, Sparkles, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { ArrowRight, Shield, Users, Sparkles, Eye, EyeOff, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import salviorisLogo from "../../assets/salvioris.jpg";
 import { api, ApiError } from "../lib/api";
@@ -14,23 +14,77 @@ import styles from "./Signup.module.scss";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    username: "",
     password: "",
     confirmPassword: "",
-    street: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    country: "",
+    recoveryEmail: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Validate username format
+  const validateUsername = (username: string): string | null => {
+    if (username.length < 3) {
+      return "Username must be at least 3 characters";
+    }
+    if (username.length > 20) {
+      return "Username must be at most 20 characters";
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return "Username can only contain letters, numbers, and underscores";
+    }
+    if (!/^[a-zA-Z0-9]/.test(username)) {
+      return "Username must start with a letter or number";
+    }
+    return null;
+  };
+
+  // Check username availability
+  const checkUsername = async (username: string) => {
+    const validationError = validateUsername(username);
+    if (validationError) {
+      setUsernameError(validationError);
+      setUsernameAvailable(false);
+      return;
+    }
+
+    setIsCheckingUsername(true);
+    setUsernameError(null);
+    
+    try {
+      const response = await api.checkUsername({ username });
+      setUsernameAvailable(response.available);
+      if (!response.available) {
+        setUsernameError("Username is already taken");
+      }
+    } catch (err) {
+      const apiError = err as ApiError;
+      setUsernameError(apiError.message || "Failed to check username");
+      setUsernameAvailable(false);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  // Debounced username check
+  useEffect(() => {
+    if (formData.username.length >= 3) {
+      const timer = setTimeout(() => {
+        checkUsername(formData.username);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setUsernameAvailable(null);
+      setUsernameError(null);
+    }
+  }, [formData.username]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -40,46 +94,43 @@ export default function SignupPage() {
     setError(null);
   };
 
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Validate step 1 fields
-    if (formData.name && formData.email && formData.password && formData.confirmPassword) {
-      if (formData.password !== formData.confirmPassword) {
-        setError("Passwords do not match");
-        return;
-      }
-      setError(null);
-      setCurrentStep(2);
-    }
-  };
-
-  const handleBack = () => {
-    setCurrentStep(1);
-    setError(null);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
+    // Validate password
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check username one more time
+    if (usernameAvailable === false) {
+      setError("Please choose an available username");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const signupData = {
-        name: formData.name,
-        email: formData.email,
+        username: formData.username,
         password: formData.password,
-        street: formData.street,
-        city: formData.city,
-        state: formData.state,
-        zip_code: formData.zipCode,
-        country: formData.country,
+        recovery_email: formData.recoveryEmail || undefined,
       };
 
-      const response = await api.userSignup(signupData);
+      const response = await api.privacySignup(signupData);
       if (response.success) {
         // Store user data in localStorage
         localStorage.setItem("user", JSON.stringify(response.user));
-        // Redirect to dashboard or home
+        // Redirect to home
         router.push("/");
       }
     } catch (err) {
@@ -149,266 +200,207 @@ export default function SignupPage() {
           <div className={styles.formSection}>
             <Card className={styles.formCard}>
               <CardHeader>
-                {/* Step Indicator */}
-                <div className={styles.stepIndicator}>
-                  <div className={`${styles.step} ${currentStep >= 1 ? styles.active : ""}`}>
-                    <div className={styles.stepNumber}>1</div>
-                    <span className={styles.stepLabel}>Account Details</span>
-                  </div>
-                  <div className={`${styles.stepLine} ${currentStep >= 2 ? styles.active : ""}`}></div>
-                  <div className={`${styles.step} ${currentStep >= 2 ? styles.active : ""}`}>
-                    <div className={styles.stepNumber}>2</div>
-                    <span className={styles.stepLabel}>Address</span>
-                  </div>
-                </div>
-
                 <CardTitle className={styles.formTitle}>
-                  {currentStep === 1 ? "Create Your Account" : "Add Your Address"}
+                  Create Your Anonymous Account
                 </CardTitle>
                 <p className={styles.formSubtitle}>
-                  {currentStep === 1
-                    ? "Start your healing journey today. It only takes a minute."
-                    : "Help us connect you with local therapists if needed."}
+                  Start your healing journey today. Your privacy is our priority.
                 </p>
               </CardHeader>
               <CardContent>
-                <form onSubmit={currentStep === 1 ? handleNext : handleSubmit} className={styles.form}>
+                <form onSubmit={handleSubmit} className={styles.form}>
                   {error && (
                     <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee', borderRadius: '4px' }}>
                       {error}
                     </div>
                   )}
-                  {currentStep === 1 ? (
-                    <>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="name" className={styles.label}>
-                          Full Name
-                        </label>
-                        <Input
-                          id="name"
-                          name="name"
-                          type="text"
-                          placeholder="Enter your full name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          required
-                          className={styles.input}
-                        />
-                      </div>
 
-                      <div className={styles.formGroup}>
-                        <label htmlFor="email" className={styles.label}>
-                          Email Address
-                        </label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          placeholder="your@email.com"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                          className={styles.input}
-                        />
+                  {/* Privacy Warning */}
+                  <div style={{ 
+                    marginBottom: '1.5rem', 
+                    padding: '1rem', 
+                    backgroundColor: '#fff3cd', 
+                    borderRadius: '8px',
+                    border: '1px solid #ffc107'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                      <AlertTriangle style={{ color: '#856404', flexShrink: 0, marginTop: '2px' }} size={20} />
+                      <div>
+                        <strong style={{ color: '#856404', display: 'block', marginBottom: '0.25rem' }}>
+                          Privacy Reminder
+                        </strong>
+                        <p style={{ color: '#856404', fontSize: '0.875rem', margin: 0 }}>
+                          <strong>Do not use your real name</strong> in your username. Choose a unique, anonymous username to protect your privacy. Your username will be visible to others on the platform.
+                        </p>
                       </div>
+                    </div>
+                  </div>
 
-                      <div className={styles.formGroup}>
-                        <label htmlFor="password" className={styles.label}>
-                          Password
-                        </label>
-                        <div className={styles.passwordWrapper}>
-                          <Input
-                            id="password"
-                            name="password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Create a strong password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                            className={styles.input}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className={styles.eyeButton}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                          >
-                            {showPassword ? (
-                              <EyeOff className={styles.eyeIcon} />
-                            ) : (
-                              <Eye className={styles.eyeIcon} />
-                            )}
-                          </button>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="username" className={styles.label}>
+                      Username
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Input
+                        id="username"
+                        name="username"
+                        type="text"
+                        placeholder="Choose a unique username"
+                        value={formData.username}
+                        onChange={handleChange}
+                        required
+                        className={styles.input}
+                        style={{
+                          paddingRight: '2.5rem'
+                        }}
+                      />
+                      {formData.username.length >= 3 && (
+                        <div style={{
+                          position: 'absolute',
+                          right: '0.75rem',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}>
+                          {isCheckingUsername ? (
+                            <span style={{ fontSize: '0.75rem', color: '#666' }}>Checking...</span>
+                          ) : usernameAvailable === true ? (
+                            <CheckCircle2 size={20} style={{ color: '#22c55e' }} />
+                          ) : usernameAvailable === false ? (
+                            <XCircle size={20} style={{ color: '#ef4444' }} />
+                          ) : null}
                         </div>
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label htmlFor="confirmPassword" className={styles.label}>
-                          Confirm Password
-                        </label>
-                        <div className={styles.passwordWrapper}>
-                          <Input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="Confirm your password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            className={styles.input}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className={styles.eyeButton}
-                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOff className={styles.eyeIcon} />
-                            ) : (
-                              <Eye className={styles.eyeIcon} />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      <Button 
-                        type="submit" 
-                        variant="healing" 
-                        className={styles.submitButton}
-                        size="lg"
-                      >
-                        Continue
-                        <ArrowRight className={styles.buttonIcon} />
-                      </Button>
-
-                      <div className={styles.divider}>
-                        <span>or</span>
-                      </div>
-
-                      <Link href="/therapist-signup" className={styles.therapistLink}>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          className={styles.therapistButton}
-                          size="lg"
-                        >
-                          Sign Up as Therapist
-                        </Button>
-                      </Link>
-
-                      <p className={styles.loginLink}>
-                        Already have an account?{" "}
-                        <Link href="/signin" className={styles.link}>
-                          Sign In
-                        </Link>
+                      )}
+                    </div>
+                    {usernameError && (
+                      <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                        {usernameError}
                       </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="street" className={styles.label}>
-                          Street Address
-                        </label>
-                        <Input
-                          id="street"
-                          name="street"
-                          type="text"
-                          placeholder="123 Main Street"
-                          value={formData.street}
-                          onChange={handleChange}
-                          className={styles.input}
-                        />
-                      </div>
+                    )}
+                    {!usernameError && formData.username.length >= 3 && usernameAvailable === true && (
+                      <p style={{ color: '#22c55e', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                        Username is available!
+                      </p>
+                    )}
+                    <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                      3-20 characters, letters, numbers, and underscores only
+                    </p>
+                  </div>
 
-                      <div className={styles.addressRow}>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="city" className={styles.label}>
-                            City
-                          </label>
-                          <Input
-                            id="city"
-                            name="city"
-                            type="text"
-                            placeholder="City"
-                            value={formData.city}
-                            onChange={handleChange}
-                            className={styles.input}
-                          />
-                        </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="password" className={styles.label}>
+                      Password
+                    </label>
+                    <div className={styles.passwordWrapper}>
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Create a strong password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        className={styles.input}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className={styles.eyeButton}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? (
+                          <EyeOff className={styles.eyeIcon} />
+                        ) : (
+                          <Eye className={styles.eyeIcon} />
+                        )}
+                      </button>
+                    </div>
+                    <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                      Minimum 8 characters
+                    </p>
+                  </div>
 
-                        <div className={styles.formGroup}>
-                          <label htmlFor="state" className={styles.label}>
-                            State/Province
-                          </label>
-                          <Input
-                            id="state"
-                            name="state"
-                            type="text"
-                            placeholder="State"
-                            value={formData.state}
-                            onChange={handleChange}
-                            className={styles.input}
-                          />
-                        </div>
-                      </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="confirmPassword" className={styles.label}>
+                      Confirm Password
+                    </label>
+                    <div className={styles.passwordWrapper}>
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                        className={styles.input}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className={styles.eyeButton}
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className={styles.eyeIcon} />
+                        ) : (
+                          <Eye className={styles.eyeIcon} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
 
-                      <div className={styles.addressRow}>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="zipCode" className={styles.label}>
-                            ZIP/Postal Code
-                          </label>
-                          <Input
-                            id="zipCode"
-                            name="zipCode"
-                            type="text"
-                            placeholder="12345"
-                            value={formData.zipCode}
-                            onChange={handleChange}
-                            className={styles.input}
-                          />
-                        </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="recoveryEmail" className={styles.label}>
+                      Recovery Email <span style={{ color: '#666', fontWeight: 'normal' }}>(Optional but recommended)</span>
+                    </label>
+                    <Input
+                      id="recoveryEmail"
+                      name="recoveryEmail"
+                      type="email"
+                      placeholder="your@email.com (for account recovery)"
+                      value={formData.recoveryEmail}
+                      onChange={handleChange}
+                      className={styles.input}
+                    />
+                    <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                      Used only for account recovery. Never shown publicly.
+                    </p>
+                  </div>
 
-                        <div className={styles.formGroup}>
-                          <label htmlFor="country" className={styles.label}>
-                            Country
-                          </label>
-                          <Input
-                            id="country"
-                            name="country"
-                            type="text"
-                            placeholder="Country"
-                            value={formData.country}
-                            onChange={handleChange}
-                            className={styles.input}
-                          />
-                        </div>
-                      </div>
+                  <Button 
+                    type="submit" 
+                    variant="healing" 
+                    className={styles.submitButton}
+                    size="lg"
+                    disabled={isLoading || usernameAvailable === false || isCheckingUsername}
+                  >
+                    {isLoading ? "Creating Account..." : "Create Account"}
+                    <ArrowRight className={styles.buttonIcon} />
+                  </Button>
 
-                      <div className={styles.buttonGroup}>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          className={styles.backButton}
-                          size="lg"
-                          onClick={handleBack}
-                        >
-                          <ArrowLeft className={styles.buttonIcon} />
-                          Back
-                        </Button>
-                        <Button 
-                          type="submit" 
-                          variant="healing" 
-                          className={styles.submitButton}
-                          size="lg"
-                          disabled={isLoading}
-                        >
-                          {isLoading ? "Creating Account..." : "Create Account"}
-                          <ArrowRight className={styles.buttonIcon} />
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                  <div className={styles.divider}>
+                    <span>or</span>
+                  </div>
+
+                  <Link href="/therapist-signup" className={styles.therapistLink}>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className={styles.therapistButton}
+                      size="lg"
+                    >
+                      Sign Up as Therapist
+                    </Button>
+                  </Link>
+
+                  <p className={styles.loginLink}>
+                    Already have an account?{" "}
+                    <Link href="/signin" className={styles.link}>
+                      Sign In
+                    </Link>
+                  </p>
                 </form>
               </CardContent>
             </Card>
@@ -418,4 +410,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
