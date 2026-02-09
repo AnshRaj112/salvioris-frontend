@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Send, MessageSquare, X, LogIn, UserPlus, LogOut, Heart, Star, CheckCircle } from "lucide-react";
 import Image from "next/image";
 import salviorisLogo from "../../assets/salvioris.jpg";
-import { api, ApiError, Vent, CreateVentResponse } from "../lib/api";
+import { api, ApiError, Vent, CreateVentResponse, Journal } from "../lib/api";
 import { Textarea } from "../components/ui/textarea";
 import styles from "./Vent.module.scss";
 
@@ -39,6 +39,8 @@ export default function VentPage() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [journals, setJournals] = useState<Journal[]>([]);
+  const [isLoadingJournals, setIsLoadingJournals] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const loadingMoreRef = useRef<HTMLDivElement>(null);
@@ -191,6 +193,25 @@ export default function VentPage() {
       loadVents(0, true);
     }
   }, [isLoggedIn, user?.id, loadVents]);
+
+  // Load recent journals for logged-in users
+  useEffect(() => {
+    const loadJournals = async () => {
+      if (!isLoggedIn || !user?.id) return;
+      try {
+        setIsLoadingJournals(true);
+        const response = await api.getJournals(user.id, 10, 0);
+        if (response.success) {
+          setJournals(response.journals);
+        }
+      } catch (err) {
+        console.error("Error loading journals:", err);
+      } finally {
+        setIsLoadingJournals(false);
+      }
+    };
+    loadJournals();
+  }, [isLoggedIn, user?.id]);
 
   // Intersection Observer for infinite scroll (load more when scrolling up)
   useEffect(() => {
@@ -595,24 +616,37 @@ export default function VentPage() {
               disabled={isBlocked}
             />
             <div className={styles.inputActions}>
-            <Button
-                onClick={() => setShowFeedbackModal(true)}
-                variant="default"
-                className={styles.feedbackButton}
-                title="Leave Feedback"
+              <Link
+                href={isLoggedIn ? "/journaling" : "/signup?redirect=/journaling"}
               >
-                <Star className={styles.feedbackIcon} />
-                <span className={styles.feedbackButtonText}>Leave Feedback</span>
-              </Button>
-              <Button
-                onClick={isLoggedIn ? handleSend : handleSendAsGuest}
-                disabled={!message.trim() || isSending || isBlocked}
-                variant="healing"
-                className={styles.sendButton}
-              >
-                <Send className={styles.sendIcon} />
-                Send
-              </Button>
+                <Button
+                  variant="healing"
+                  size="sm"
+                  className={styles.journalCTAButton}
+                >
+                  {isLoggedIn ? "Open Journaling" : "Start Journaling"}
+                </Button>
+              </Link>
+              <div className={styles.inputButtons}>
+                <Button
+                  onClick={() => setShowFeedbackModal(true)}
+                  variant="default"
+                  className={styles.feedbackButton}
+                  title="Leave Feedback"
+                >
+                  <Star className={styles.feedbackIcon} />
+                  <span className={styles.feedbackButtonText}>Leave Feedback</span>
+                </Button>
+                <Button
+                  onClick={isLoggedIn ? handleSend : handleSendAsGuest}
+                  disabled={!message.trim() || isSending || isBlocked}
+                  variant="healing"
+                  className={styles.sendButton}
+                >
+                  <Send className={styles.sendIcon} />
+                  Send
+                </Button>
+              </div>
             </div>
           </div>
         </div>

@@ -146,6 +146,32 @@ export interface GetVentsResponse {
   total: number;
 }
 
+// Journaling interfaces
+export interface Journal {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+}
+
+export interface CreateJournalData {
+  title: string;
+  content: string;
+  user_id: string;
+}
+
+export interface CreateJournalResponse {
+  success: boolean;
+  message: string;
+  journal?: Journal;
+}
+
+export interface GetJournalsResponse {
+  success: boolean;
+  journals: Journal[];
+  total: number;
+}
+
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -482,6 +508,43 @@ export const api = {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
     return data as GetVentsResponse;
+  },
+
+  // Journaling routes
+  createJournal: async (data: CreateJournalData): Promise<CreateJournalResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/journals`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as CreateJournalResponse;
+  },
+
+  getJournals: async (userId: string, limit?: number, skip?: number): Promise<GetJournalsResponse> => {
+    const params = new URLSearchParams();
+    params.append('user_id', userId);
+    if (limit) params.append('limit', limit.toString());
+    if (skip) params.append('skip', skip.toString());
+
+    const response = await fetch(`${API_BASE_URL}/api/journals?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data as GetJournalsResponse;
   },
 
   // Feedback routes

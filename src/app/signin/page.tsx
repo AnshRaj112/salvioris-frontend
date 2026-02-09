@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -14,6 +14,7 @@ import styles from "./Signin.module.scss";
 
 export default function SigninPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -41,8 +42,9 @@ export default function SigninPage() {
       if (response.success) {
         // Store user data in localStorage
         localStorage.setItem("user", JSON.stringify(response.user));
-        // Redirect to dashboard or home
-        router.push("/");
+        // Redirect to desired page or home
+        const redirect = searchParams.get("redirect") || "/home";
+        router.push(redirect);
       }
     } catch (err) {
       const apiError = err as ApiError;
@@ -207,7 +209,16 @@ export default function SigninPage() {
 
                   <p className={styles.signupLink}>
                     Don&apos;t have an account?{" "}
-                    <Link href="/signup" className={styles.link}>
+                    <Link
+                      href={
+                        searchParams.get("redirect")
+                          ? `/signup?redirect=${encodeURIComponent(
+                              searchParams.get("redirect") as string
+                            )}`
+                          : "/signup"
+                      }
+                      className={styles.link}
+                    >
                       Create Account
                     </Link>
                   </p>
