@@ -63,13 +63,13 @@ export default function TherapistSigninPage() {
                 <div className={styles.logoIcon}>
                   <Image 
                     src={salviorisLogo} 
-                    alt="Salvioris Logo" 
+                    alt="SALVIORIS Logo" 
                     width={48} 
                     height={48}
                     className={styles.logoImage}
                   />
                 </div>
-                <h1 className={styles.brandName}>Salvioris</h1>
+                <h1 className={styles.brandName}>SALVIORIS</h1>
               </div>
               
               <h2 className={styles.storyTitle}>

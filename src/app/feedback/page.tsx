@@ -63,7 +63,7 @@ export default function FeedbackPage() {
               <CheckCircle className={styles.successIcon} />
               <h2 className={styles.successTitle}>Thank You for Your Feedback!</h2>
               <p className={styles.successMessage}>
-                Your feedback has been received and will help us improve Salvioris. 
+                Your feedback has been received and will help us improve SALVIORIS. 
                 We appreciate you taking the time to share your thoughts.
               </p>
               <Link href="/">
@@ -93,7 +93,7 @@ export default function FeedbackPage() {
               <CardTitle className={styles.title}>Share Your Feedback</CardTitle>
             </div>
             <p className={styles.subtitle}>
-              Help us improve Salvioris by sharing your thoughts, suggestions, or areas where we can do better. 
+              Help us improve SALVIORIS by sharing your thoughts, suggestions, or areas where we can do better. 
               Your feedback is valuable to us.
             </p>
           </CardHeader>

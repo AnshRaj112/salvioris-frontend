@@ -49,14 +49,14 @@ export function Footer() {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
                 <Image 
                   src={salviorisLogo} 
-                  alt="Salvioris Logo" 
+                  alt="SALVIORIS Logo" 
                   width={32} 
                   height={32}
                   className="object-contain"
                 />
               </div>
               <span className="font-display font-semibold text-xl text-foreground">
-                Salvioris
+                SALVIORIS
               </span>
             </div>
             
@@ -69,7 +69,7 @@ export function Footer() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Phone className="w-4 h-4" />
-                <span>1-800-Salvioris</span>
+                <span>1-800-SALVIORIS</span>
               </div>
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="w-4 h-4" />
@@ -136,7 +136,7 @@ export function Footer() {
         <div className="border-t border-border pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-muted-foreground mb-4 md:mb-0">
-              <p>© {new Date().getFullYear()} Salvioris. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} SALVIORIS. All rights reserved.</p>
               <p className="mt-1">
                 Licensed mental health professionals. HIPAA compliant platform.
               </p>

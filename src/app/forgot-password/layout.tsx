@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Forgot Password - Reset Your Account",
-  description: "Reset your Salvioris account password. Enter your recovery email to receive password reset instructions.",
+  description: "Reset your SALVIORIS account password. Enter your recovery email to receive password reset instructions.",
   keywords: ["forgot password", "password reset", "account recovery", "reset password"],
   robots: {
     index: false,

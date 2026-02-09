@@ -513,13 +513,13 @@ export default function VentPage() {
               <div className={styles.logoIcon}>
                 <Image 
                   src={salviorisLogo} 
-                  alt="Salvioris Logo" 
+                  alt="SALVIORIS Logo" 
                   width={48} 
                   height={48}
                   className={styles.logoImage}
                 />
               </div>
-              <h1 className={styles.brandName}>Salvioris</h1>
+              <h1 className={styles.brandName}>SALVIORIS</h1>
             </div>
             {isLoggedIn && (
               <div className={styles.userSection}>
@@ -780,7 +780,7 @@ export default function VentPage() {
               <div className={styles.encouragementFooter}>
                 <p className={styles.encouragementClosing}>
                   With love and understanding,<br />
-                  <strong>The Salvioris Team</strong>
+                  <strong>The SALVIORIS Team</strong>
                 </p>
               </div>
               <Button
@@ -835,7 +835,7 @@ export default function VentPage() {
                   <p className={styles.feedbackSubtitle}>
                     We know you&apos;re going through a lot right now, and we&apos;re here for you. 
                     If you can spare just a minute, we&apos;d love to know where we can improve so you can feel much better. 
-                    Your voice matters, and with your help, we can make Salvioris a more supportive space for everyone.
+                    Your voice matters, and with your help, we can make SALVIORIS a more supportive space for everyone.
                   </p>
                   
                   {feedbackError && (

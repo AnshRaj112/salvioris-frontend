@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Footer } from "./components/Footer/footer";
+// import { Footer } from "./components/Footer/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,24 +15,24 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Salvioris - Your Safe Space for Mental Wellness",
-    template: "%s | Salvioris"
+    default: "SALVIORIS - Your Safe Space for Mental Wellness",
+    template: "%s | SALVIORIS"
   },
-  description: "Salvioris is a privacy-first mental wellness platform connecting users with licensed therapists. Express yourself freely in a safe, judgment-free environment.",
+  description: "SALVIORIS is a privacy-first mental wellness platform connecting users with licensed therapists. Express yourself freely in a safe, judgment-free environment.",
   keywords: ["mental health", "therapy", "counseling", "wellness", "privacy", "anonymous therapy", "online therapy"],
-  authors: [{ name: "Salvioris" }],
-  creator: "Salvioris",
-  publisher: "Salvioris",
+  authors: [{ name: "SALVIORIS" }],
+  creator: "SALVIORIS",
+  publisher: "SALVIORIS",
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Salvioris",
-    title: "Salvioris - Your Safe Space for Mental Wellness",
+    siteName: "SALVIORIS",
+    title: "SALVIORIS - Your Safe Space for Mental Wellness",
     description: "Privacy-first mental wellness platform connecting users with licensed therapists.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Salvioris - Your Safe Space for Mental Wellness",
+    title: "SALVIORIS - Your Safe Space for Mental Wellness",
     description: "Privacy-first mental wellness platform connecting users with licensed therapists.",
   },
   robots: {
@@ -50,7 +50,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {children}
-        <Footer />
+        {/* <Footer /> */}
       </body>
     </html>
   );

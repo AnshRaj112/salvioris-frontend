@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck } from "lucide-react";
 import styles from "./Admin.module.scss";
 
 interface Therapist {
@@ -52,6 +52,15 @@ interface Contact {
   ip_address?: string;
 }
 
+interface WaitlistEntry {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  created_at: string;
+  ip_address?: string;
+}
+
 import { api } from "../lib/api";
 
 export default function AdminDashboard() {
@@ -60,12 +69,16 @@ export default function AdminDashboard() {
   const [blockedIPs, setBlockedIPs] = useState<BlockedIP[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [userWaitlist, setUserWaitlist] = useState<WaitlistEntry[]>([]);
+  const [therapistWaitlist, setTherapistWaitlist] = useState<WaitlistEntry[]>([]);
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingIPs, setIsLoadingIPs] = useState(false);
   const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
   const [isLoadingContacts, setIsLoadingContacts] = useState(false);
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact">("pending");
+  const [isLoadingUserWaitlist, setIsLoadingUserWaitlist] = useState(false);
+  const [isLoadingTherapistWaitlist, setIsLoadingTherapistWaitlist] = useState(false);
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist">("pending");
 
   useEffect(() => {
     fetchTherapists();
@@ -75,6 +88,10 @@ export default function AdminDashboard() {
       fetchFeedbacks();
     } else if (activeTab === "contact") {
       fetchContacts();
+    } else if (activeTab === "userWaitlist") {
+      fetchUserWaitlist();
+    } else if (activeTab === "therapistWaitlist") {
+      fetchTherapistWaitlist();
     }
   }, [activeTab]);
 
@@ -141,6 +158,36 @@ export default function AdminDashboard() {
       alert("Failed to fetch contacts");
     } finally {
       setIsLoadingContacts(false);
+    }
+  };
+
+  const fetchUserWaitlist = async () => {
+    setIsLoadingUserWaitlist(true);
+    try {
+      const data = await api.getUserWaitlist();
+      if (data.success) {
+        setUserWaitlist(data.entries || []);
+      }
+    } catch (error) {
+      console.error("Error fetching user waitlist:", error);
+      alert("Failed to fetch user waitlist");
+    } finally {
+      setIsLoadingUserWaitlist(false);
+    }
+  };
+
+  const fetchTherapistWaitlist = async () => {
+    setIsLoadingTherapistWaitlist(true);
+    try {
+      const data = await api.getTherapistWaitlist();
+      if (data.success) {
+        setTherapistWaitlist(data.entries || []);
+      }
+    } catch (error) {
+      console.error("Error fetching therapist waitlist:", error);
+      alert("Failed to fetch therapist waitlist");
+    } finally {
+      setIsLoadingTherapistWaitlist(false);
     }
   };
 
@@ -244,6 +291,20 @@ export default function AdminDashboard() {
             <Contact className={styles.tabIcon} />
             Contact Us ({contacts.length})
           </button>
+          <button
+            className={`${styles.tab} ${activeTab === "userWaitlist" ? styles.active : ""}`}
+            onClick={() => setActiveTab("userWaitlist")}
+          >
+            <Users className={styles.tabIcon} />
+            User Waitlist ({userWaitlist.length})
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === "therapistWaitlist" ? styles.active : ""}`}
+            onClick={() => setActiveTab("therapistWaitlist")}
+          >
+            <UserCheck className={styles.tabIcon} />
+            Therapist Waitlist ({therapistWaitlist.length})
+          </button>
         </div>
 
         {activeTab === "feedback" ? (
@@ -325,6 +386,100 @@ export default function AdminDashboard() {
                         <div className={styles.infoItem}>
                           <span className={styles.label}>IP Address:</span>
                           <span>{contact.ip_address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        ) : activeTab === "userWaitlist" ? (
+          isLoadingUserWaitlist ? (
+            <div className={styles.loading}>Loading user waitlist...</div>
+          ) : userWaitlist.length === 0 ? (
+            <div className={styles.emptyState}>
+              <Users className={styles.emptyIcon} />
+              <p>No user waitlist entries found.</p>
+            </div>
+          ) : (
+            <div className={styles.feedbacksGrid}>
+              {userWaitlist.map((entry) => (
+                <Card key={entry.id} className={styles.feedbackCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.cardTitle}>
+                      <Users className={styles.icon} />
+                      User Waitlist #{entry.id.slice(-6)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={styles.info}>
+                      <div className={styles.infoItem}>
+                        <User className={styles.infoIcon} />
+                        <span><strong>Name:</strong> {entry.name}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <Mail className={styles.infoIcon} />
+                        <span><strong>Email:</strong> {entry.email}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.label}>Joined:</span>
+                        <span>{new Date(entry.created_at).toLocaleString()}</span>
+                      </div>
+                      {entry.ip_address && (
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>IP Address:</span>
+                          <span>{entry.ip_address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        ) : activeTab === "therapistWaitlist" ? (
+          isLoadingTherapistWaitlist ? (
+            <div className={styles.loading}>Loading therapist waitlist...</div>
+          ) : therapistWaitlist.length === 0 ? (
+            <div className={styles.emptyState}>
+              <UserCheck className={styles.emptyIcon} />
+              <p>No therapist waitlist entries found.</p>
+            </div>
+          ) : (
+            <div className={styles.feedbacksGrid}>
+              {therapistWaitlist.map((entry) => (
+                <Card key={entry.id} className={styles.feedbackCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.cardTitle}>
+                      <UserCheck className={styles.icon} />
+                      Therapist Waitlist #{entry.id.slice(-6)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={styles.info}>
+                      <div className={styles.infoItem}>
+                        <User className={styles.infoIcon} />
+                        <span><strong>Name:</strong> {entry.name}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <Mail className={styles.infoIcon} />
+                        <span><strong>Email:</strong> {entry.email}</span>
+                      </div>
+                      {entry.phone && (
+                        <div className={styles.infoItem}>
+                          <Phone className={styles.infoIcon} />
+                          <span><strong>Phone:</strong> {entry.phone}</span>
+                        </div>
+                      )}
+                      <div className={styles.infoItem}>
+                        <span className={styles.label}>Joined:</span>
+                        <span>{new Date(entry.created_at).toLocaleString()}</span>
+                      </div>
+                      {entry.ip_address && (
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>IP Address:</span>
+                          <span>{entry.ip_address}</span>
                         </div>
                       )}
                     </div>

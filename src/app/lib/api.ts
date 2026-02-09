@@ -598,5 +598,80 @@ export const api = {
     }
     return data;
   },
+
+  // Waitlist routes
+  submitUserWaitlist: async (data: { name: string; email: string }) => {
+    const response = await fetch(`${API_BASE_URL}/api/waitlist/user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    let responseData;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        responseData = await response.json();
+      } catch (error) {
+        throw { message: 'Failed to parse response', status: response.status } as ApiError;
+      }
+    } else {
+      const text = await response.text();
+      throw { message: text || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData;
+  },
+
+  submitTherapistWaitlist: async (data: { name: string; email: string; phone?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/api/waitlist/therapist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    let responseData;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        responseData = await response.json();
+      } catch (error) {
+        throw { message: 'Failed to parse response', status: response.status } as ApiError;
+      }
+    } else {
+      const text = await response.text();
+      throw { message: text || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData;
+  },
+
+  getUserWaitlist: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/user`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getTherapistWaitlist: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/therapist`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
 };
 
