@@ -319,8 +319,10 @@
   }
 
   // Firefox scrollbar styling
-  scrollbar-width: thin;
-  scrollbar-color: #283848 transparent;
+  & {
+    scrollbar-width: thin;
+    scrollbar-color: #283848 transparent;
+  }
 }
 
 .messageWrapper {
