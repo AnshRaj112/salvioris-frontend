@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
@@ -13,6 +14,7 @@ interface User {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [journals, setJournals] = useState<Journal[]>([]);
   const [isLoadingJournals, setIsLoadingJournals] = useState(false);
@@ -27,15 +29,20 @@ export default function HomePage() {
     if (typeof window === "undefined") return;
 
     const userData = localStorage.getItem("user");
-    if (!userData) return;
+    if (!userData) {
+      router.push("/signup?redirect=/home");
+      return;
+    }
 
     try {
       const parsed = JSON.parse(userData);
       setUser(parsed);
     } catch {
       localStorage.removeItem("user");
+      router.push("/signup?redirect=/home");
+      return;
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const load = async () => {
