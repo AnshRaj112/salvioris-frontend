@@ -117,16 +117,16 @@ export function Footer() {
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <a
-                href="tel:988"
+                href="tel:14416"
                 className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
               >
-                Call 988
+                Call 14416
               </a>
               <a
-                href="tel:911"
+                href="tel:108"
                 className="inline-flex items-center justify-center px-4 py-2 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/10 transition-colors"
               >
-                Emergency: 911
+                Emergency: 108
               </a>
             </div>
           </div>

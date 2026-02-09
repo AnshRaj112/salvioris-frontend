@@ -10,7 +10,7 @@ const faqs = [
     },
     {
       question: "What if I&apos;m in a crisis situation?",
-      answer: "If you&apos;re experiencing a mental health crisis, please call 988 (Suicide & Crisis Lifeline) or 911 immediately. Mental Health App is designed for ongoing therapy support, not emergency crisis intervention.",
+      answer: "If you&apos;re experiencing a mental health crisis, please call 14416 (Suicide & Crisis Lifeline) or 108 immediately. Mental Health App is designed for ongoing therapy support, not emergency crisis intervention.",
     },
     {
       question: "How much does therapy cost?",
