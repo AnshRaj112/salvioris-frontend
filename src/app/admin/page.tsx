@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, Lock } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, Lock, LogOut } from "lucide-react";
 import styles from "./Admin.module.scss";
 
 interface Therapist {
@@ -80,11 +80,33 @@ export default function AdminDashboard() {
   const [isLoadingTherapistWaitlist, setIsLoadingTherapistWaitlist] = useState(false);
   const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist">("pending");
   const [isSiteLocked, setIsSiteLocked] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check authentication first, before anything else
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const admin = localStorage.getItem("admin");
+      if (!admin) {
+        // Redirect immediately if not authenticated
+        window.location.replace("/admin-login");
+        return;
+      }
+      // Admin is authenticated
+      setIsAuthenticated(true);
+      setIsCheckingAuth(false);
+      
+      // Check site lock status
+      const unlocked = localStorage.getItem("site_unlocked") === "true";
+      setIsSiteLocked(!unlocked);
+    }
+  }, []);
 
   useEffect(() => {
-    // Check site lock status
-    const unlocked = localStorage.getItem("site_unlocked") === "true";
-    setIsSiteLocked(!unlocked);
+    // Only fetch data if authenticated
+    if (!isAuthenticated) {
+      return;
+    }
     
     fetchTherapists();
     if (activeTab === "blocked") {
@@ -98,7 +120,7 @@ export default function AdminDashboard() {
     } else if (activeTab === "therapistWaitlist") {
       fetchTherapistWaitlist();
     }
-  }, [activeTab]);
+  }, [activeTab, isAuthenticated]);
 
   const handleToggleSiteLock = () => {
     const newLockState = !isSiteLocked;
@@ -106,6 +128,13 @@ export default function AdminDashboard() {
     localStorage.setItem("site_unlocked", newLockState ? "false" : "true");
     // Reload to apply changes
     window.location.reload();
+  };
+
+  const handleLogout = () => {
+    if (confirm("Are you sure you want to logout?")) {
+      localStorage.removeItem("admin");
+      window.location.href = "/admin-login";
+    }
   };
 
   const fetchTherapists = async () => {
@@ -260,30 +289,51 @@ export default function AdminDashboard() {
 
   const therapists = activeTab === "pending" ? pendingTherapists : activeTab === "approved" ? approvedTherapists : [];
 
+  // Show loading or nothing while checking authentication
+  if (isCheckingAuth || !isAuthenticated) {
+    return (
+      <div className={styles.loading}>
+        <div className={styles.spinner}></div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.adminDashboard}>
       <div className={styles.header}>
         <div className={styles.headerContent}>
-          <Shield className={styles.headerIcon} />
-          <h1 className={styles.title}>Admin Dashboard</h1>
+          <div className={styles.headerLeft}>
+            <Shield className={styles.headerIcon} />
+            <h1 className={styles.title}>Admin Dashboard</h1>
+          </div>
+          <div className={styles.headerRight}>
+            <Button
+              onClick={handleToggleSiteLock}
+              variant={isSiteLocked ? "default" : "destructive"}
+              className={styles.siteLockButton}
+            >
+              {isSiteLocked ? (
+                <>
+                  <Unlock className={styles.buttonIcon} />
+                  Unlock Site
+                </>
+              ) : (
+                <>
+                  <Lock className={styles.buttonIcon} />
+                  Lock Site
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className={styles.logoutButton}
+            >
+              <LogOut className={styles.buttonIcon} />
+              Logout
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={handleToggleSiteLock}
-          variant={isSiteLocked ? "default" : "destructive"}
-          className={styles.siteLockButton}
-        >
-          {isSiteLocked ? (
-            <>
-              <Unlock className={styles.buttonIcon} />
-              Unlock Site
-            </>
-          ) : (
-            <>
-              <Lock className={styles.buttonIcon} />
-              Lock Site
-            </>
-          )}
-        </Button>
       </div>
 
       <div className={styles.container}>

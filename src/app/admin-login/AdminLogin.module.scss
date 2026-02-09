@@ -1,0 +1,360 @@
+.adminLoginPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #3b82f6 0%, #ef4444 50%, #1e40af 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+  width: 100%;
+  padding: 2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 0;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  position: relative;
+  z-index: 1;
+
+  @media (min-width: 640px) {
+    padding: 0 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 2rem;
+  }
+}
+
+.contentWrapper {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+}
+
+.brandSection {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 2rem 0;
+
+  @media (min-width: 1024px) {
+    padding: 0;
+  }
+}
+
+.brandContent {
+  max-width: 100%;
+  width: 100%;
+
+  @media (min-width: 1024px) {
+    max-width: 600px;
+  }
+}
+
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 3rem;
+}
+
+.logoIcon {
+  width: 3rem;
+  height: 3rem;
+  background: transparent;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0.75rem;
+}
+
+.brandName {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.brandTitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: -0.02em;
+
+  @media (min-width: 640px) {
+    font-size: 3rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 3.5rem;
+    margin-bottom: 2rem;
+  }
+}
+
+.highlight {
+  background: linear-gradient(135deg, #60a5fa 0%, #f87171 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
+.brandDescription {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.75;
+  margin-bottom: 3rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  max-width: 540px;
+
+  @media (min-width: 1024px) {
+    margin-bottom: 4rem;
+  }
+}
+
+.featuresList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+.featureIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #60a5fa;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.featureContent {
+  flex: 1;
+}
+
+.featureTitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.375rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.featureText {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+}
+
+.formSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formCard {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+}
+
+.formTitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 1.875rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6 0%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.formSubtitle {
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.input {
+  background: white;
+  border: 2px solid #e5e7eb;
+  color: #000;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  color: #6b7280;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #3b82f6;
+  }
+
+  &:focus {
+    outline: none;
+    color: #3b82f6;
+  }
+}
+
+.eyeIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.submitButton {
+  width: 100%;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #ef4444 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.875rem;
+  border-radius: 8px;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #dc2626 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.errorMessage {
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.875rem;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+

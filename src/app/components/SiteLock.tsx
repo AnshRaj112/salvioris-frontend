@@ -13,8 +13,8 @@ export function SiteLock({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       const unlocked = localStorage.getItem(UNLOCK_KEY) === "true";
       
-      // If locked and not on home page or admin page, redirect immediately
-      if (!unlocked && pathname !== "/" && !pathname.startsWith("/admin")) {
+      // If locked and not on home page, admin page, or admin-login page, redirect immediately
+      if (!unlocked && pathname !== "/" && !pathname.startsWith("/admin") && pathname !== "/admin-login") {
         window.location.replace("/");
       }
     }
@@ -23,7 +23,7 @@ export function SiteLock({ children }: { children: React.ReactNode }) {
   // Check synchronously to prevent render if redirecting
   if (typeof window !== "undefined") {
     const unlocked = localStorage.getItem(UNLOCK_KEY) === "true";
-    if (!unlocked && pathname !== "/" && !pathname.startsWith("/admin")) {
+    if (!unlocked && pathname !== "/" && !pathname.startsWith("/admin") && pathname !== "/admin-login") {
       // Return null to prevent rendering while redirect happens
       return null;
     }

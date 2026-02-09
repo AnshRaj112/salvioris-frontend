@@ -673,5 +673,22 @@ export const api = {
     }
     return data;
   },
+
+  // Admin auth routes
+  adminSignin: async (data: { username: string; password: string }) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/signin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData;
+  },
 };
 
