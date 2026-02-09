@@ -1,0 +1,80 @@
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1d2935 0%, #283848 100%);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: hsl(175 34% 55%);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.lockScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #1d2935 0%, #283848 100%);
+  padding: 2rem;
+}
+
+.lockContent {
+  text-align: center;
+  max-width: 500px;
+}
+
+.lockIcon {
+  width: 4rem;
+  height: 4rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 auto 1.5rem;
+}
+
+.lockTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1rem;
+  
+  @media (min-width: 640px) {
+    font-size: 2.5rem;
+  }
+}
+
+.lockMessage {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.goHomeButton {
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  background: hsl(175 34% 55%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: hsl(175 34% 50%);
+    transform: translateY(-2px);
+  }
+}
+

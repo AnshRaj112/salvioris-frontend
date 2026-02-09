@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, Lock } from "lucide-react";
 import styles from "./Admin.module.scss";
 
 interface Therapist {
@@ -79,8 +79,13 @@ export default function AdminDashboard() {
   const [isLoadingUserWaitlist, setIsLoadingUserWaitlist] = useState(false);
   const [isLoadingTherapistWaitlist, setIsLoadingTherapistWaitlist] = useState(false);
   const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist">("pending");
+  const [isSiteLocked, setIsSiteLocked] = useState(true);
 
   useEffect(() => {
+    // Check site lock status
+    const unlocked = localStorage.getItem("site_unlocked") === "true";
+    setIsSiteLocked(!unlocked);
+    
     fetchTherapists();
     if (activeTab === "blocked") {
       fetchBlockedIPs();
@@ -94,6 +99,14 @@ export default function AdminDashboard() {
       fetchTherapistWaitlist();
     }
   }, [activeTab]);
+
+  const handleToggleSiteLock = () => {
+    const newLockState = !isSiteLocked;
+    setIsSiteLocked(newLockState);
+    localStorage.setItem("site_unlocked", newLockState ? "false" : "true");
+    // Reload to apply changes
+    window.location.reload();
+  };
 
   const fetchTherapists = async () => {
     setIsLoading(true);
@@ -254,6 +267,23 @@ export default function AdminDashboard() {
           <Shield className={styles.headerIcon} />
           <h1 className={styles.title}>Admin Dashboard</h1>
         </div>
+        <Button
+          onClick={handleToggleSiteLock}
+          variant={isSiteLocked ? "default" : "destructive"}
+          className={styles.siteLockButton}
+        >
+          {isSiteLocked ? (
+            <>
+              <Unlock className={styles.buttonIcon} />
+              Unlock Site
+            </>
+          ) : (
+            <>
+              <Lock className={styles.buttonIcon} />
+              Lock Site
+            </>
+          )}
+        </Button>
       </div>
 
       <div className={styles.container}>
