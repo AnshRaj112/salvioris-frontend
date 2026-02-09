@@ -82,10 +82,10 @@ const TherapistGrid = () => {
                   {therapist.specialty}
                 </CardDescription>
                 
-                <div className="flex items-center justify-center gap-1 mt-2">
+                <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   <span className="font-medium text-sm">{therapist.rating}</span>
-                  <span className="text-muted-foreground text-sm">({therapist.reviews} reviews)</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm">({therapist.reviews} reviews)</span>
                 </div>
               </CardHeader>
               
@@ -98,11 +98,11 @@ const TherapistGrid = () => {
                   ))}
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="font-heading text-lg font-semibold text-primary">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                  <span className="font-heading text-base sm:text-lg font-semibold text-primary">
                     {therapist.price}
                   </span>
-                  <span className={`text-sm px-2 py-1 rounded-full ${
+                  <span className={`text-xs sm:text-sm px-2 py-1 rounded-full whitespace-nowrap ${
                     therapist.availableToday 
                       ? 'bg-primary/20 text-primary' 
                       : 'bg-muted text-muted-foreground'
@@ -111,18 +111,18 @@ const TherapistGrid = () => {
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <MessageCircle className="h-3 w-3" />
-                    Chat
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-2">
+                  <Button variant="outline" size="sm" className="flex items-center justify-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2">
+                    <MessageCircle className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">Chat</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <Video className="h-3 w-3" />
-                    Video
+                  <Button variant="outline" size="sm" className="flex items-center justify-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2">
+                    <Video className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">Video</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    Book
+                  <Button variant="outline" size="sm" className="flex items-center justify-center gap-1 text-xs sm:text-sm px-1.5 sm:px-2">
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">Book</span>
                   </Button>
                 </div>
                 
@@ -135,7 +135,7 @@ const TherapistGrid = () => {
         </div>
         
         <div className={styles.footer}>
-          <Button variant="outline" size="lg">
+          <Button variant="outline" size="default" className="w-full sm:w-auto">
             View All Therapists
           </Button>
         </div>
