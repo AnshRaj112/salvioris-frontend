@@ -51,7 +51,7 @@ const ChatInterface = () => {
       <div className={styles.comingSoonBadge}>Coming Soon</div>
       <div className={styles.container}>
         <div className={styles.header}>
-          <h2 className={styles.title}>
+          <h2 className={styles.title}> 
             Real-time
             <span className={styles.titleHighlight}>
               Support
