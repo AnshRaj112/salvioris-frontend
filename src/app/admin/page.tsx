@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, Lock, LogOut, Trash2 } from "lucide-react";
 import styles from "./Admin.module.scss";
+import { ModalDialog } from "../components/ui/ModalDialog";
 
 interface Therapist {
   id: string;
@@ -83,6 +84,20 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [deletingWaitlistId, setDeletingWaitlistId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    confirmVariant?: "default" | "destructive";
+    onConfirm?: () => void | Promise<void>;
+  }>({
+    open: false,
+    title: "",
+    message: "",
+  });
+  const [isConfirmBusy, setIsConfirmBusy] = useState(false);
 
   // Check authentication first, before anything else
   useEffect(() => {
@@ -133,11 +148,18 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    if (confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("admin");
-      localStorage.removeItem("admin_token");
-      window.location.href = "/admin-login";
-    }
+    setConfirmState({
+      open: true,
+      title: "Logout",
+      message: "Are you sure you want to logout?",
+      confirmText: "Logout",
+      confirmVariant: "destructive",
+      onConfirm: () => {
+        localStorage.removeItem("admin");
+        localStorage.removeItem("admin_token");
+        window.location.href = "/admin-login";
+      },
+    });
   };
 
   const fetchTherapists = async () => {
@@ -170,7 +192,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error fetching blocked IPs:", error);
-      alert("Failed to fetch blocked IPs");
+      setNotice({ title: "Error", message: "Failed to fetch blocked IPs." });
     } finally {
       setIsLoadingIPs(false);
     }
@@ -185,7 +207,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error fetching feedbacks:", error);
-      alert("Failed to fetch feedbacks");
+      setNotice({ title: "Error", message: "Failed to fetch feedbacks." });
     } finally {
       setIsLoadingFeedbacks(false);
     }
@@ -200,7 +222,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error fetching contacts:", error);
-      alert("Failed to fetch contacts");
+      setNotice({ title: "Error", message: "Failed to fetch contacts." });
     } finally {
       setIsLoadingContacts(false);
     }
@@ -215,7 +237,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error fetching user waitlist:", error);
-      alert("Failed to fetch user waitlist");
+      setNotice({ title: "Error", message: "Failed to fetch user waitlist." });
     } finally {
       setIsLoadingUserWaitlist(false);
     }
@@ -230,104 +252,141 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error fetching therapist waitlist:", error);
-      alert("Failed to fetch therapist waitlist");
+      setNotice({ title: "Error", message: "Failed to fetch therapist waitlist." });
     } finally {
       setIsLoadingTherapistWaitlist(false);
     }
   };
 
   const handleUnblock = async (ipAddress: string) => {
-    if (!confirm(`Are you sure you want to unblock IP address ${ipAddress}?`)) return;
-
-    try {
-      const data = await api.unblockIP(ipAddress);
-      if (data.success) {
-        alert(`IP address ${ipAddress} has been unblocked successfully`);
-        fetchBlockedIPs();
-      } else {
-        alert("Failed to unblock IP address");
-      }
-    } catch (error) {
-      console.error("Error unblocking IP:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to unblock IP address";
-      alert(errorMessage);
-    }
+    setConfirmState({
+      open: true,
+      title: "Unblock IP",
+      message: `Are you sure you want to unblock IP address ${ipAddress}?`,
+      confirmText: "Unblock",
+      confirmVariant: "default",
+      onConfirm: async () => {
+        try {
+          const data = await api.unblockIP(ipAddress);
+          if (data.success) {
+            setNotice({ title: "Success", message: `IP address ${ipAddress} has been unblocked.` });
+            fetchBlockedIPs();
+          } else {
+            setNotice({ title: "Error", message: "Failed to unblock IP address." });
+          }
+        } catch (error) {
+          console.error("Error unblocking IP:", error);
+          const errorMessage = error instanceof Error ? error.message : "Failed to unblock IP address";
+          setNotice({ title: "Error", message: errorMessage });
+        }
+      },
+    });
   };
 
   const handleApprove = async (id: string) => {
-    if (!confirm("Are you sure you want to approve this therapist?")) return;
-
-    try {
-      const data = await api.approveTherapist(id);
-      if (data.success) {
-        alert("Therapist approved successfully!");
-        fetchTherapists();
-        setSelectedTherapist(null);
-      } else {
-        alert("Failed to approve therapist");
-      }
-    } catch (error) {
-      console.error("Error approving therapist:", error);
-      alert("Failed to approve therapist");
-    }
+    setConfirmState({
+      open: true,
+      title: "Approve therapist",
+      message: "Are you sure you want to approve this therapist?",
+      confirmText: "Approve",
+      confirmVariant: "default",
+      onConfirm: async () => {
+        try {
+          const data = await api.approveTherapist(id);
+          if (data.success) {
+            setNotice({ title: "Success", message: "Therapist approved successfully." });
+            fetchTherapists();
+            setSelectedTherapist(null);
+          } else {
+            setNotice({ title: "Error", message: "Failed to approve therapist." });
+          }
+        } catch (error) {
+          console.error("Error approving therapist:", error);
+          setNotice({ title: "Error", message: "Failed to approve therapist." });
+        }
+      },
+    });
   };
 
   const handleReject = async (id: string) => {
-    if (!confirm("Are you sure you want to reject this therapist application? This action cannot be undone.")) return;
-
-    try {
-      const data = await api.rejectTherapist(id);
-      if (data.success) {
-        alert("Therapist application rejected");
-        fetchTherapists();
-        setSelectedTherapist(null);
-      } else {
-        alert("Failed to reject therapist");
-      }
-    } catch (error) {
-      console.error("Error rejecting therapist:", error);
-      alert("Failed to reject therapist");
-    }
+    setConfirmState({
+      open: true,
+      title: "Reject therapist",
+      message: "Are you sure you want to reject this therapist application? This action cannot be undone.",
+      confirmText: "Reject",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        try {
+          const data = await api.rejectTherapist(id);
+          if (data.success) {
+            setNotice({ title: "Done", message: "Therapist application rejected and removed." });
+            fetchTherapists();
+            setSelectedTherapist(null);
+          } else {
+            setNotice({ title: "Error", message: "Failed to reject therapist." });
+          }
+        } catch (error) {
+          console.error("Error rejecting therapist:", error);
+          setNotice({ title: "Error", message: "Failed to reject therapist." });
+        }
+      },
+    });
   };
 
   const handleDeleteUserWaitlistEntry = async (id: string) => {
-    if (!confirm("Delete this user waitlist entry? This action cannot be undone.")) return;
-    setDeletingWaitlistId(id);
-    try {
-      const data = await api.deleteUserWaitlistEntry(id);
-      if (data.success) {
-        alert("Waitlist entry deleted");
-        fetchUserWaitlist();
-      } else {
-        alert(data.message || "Failed to delete waitlist entry");
-      }
-    } catch (error) {
-      console.error("Error deleting user waitlist entry:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
-      alert(errorMessage);
-    } finally {
-      setDeletingWaitlistId(null);
-    }
+    setConfirmState({
+      open: true,
+      title: "Delete waitlist entry",
+      message: "Delete this user waitlist entry? This action cannot be undone.",
+      confirmText: "Delete",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        setDeletingWaitlistId(id);
+        try {
+          const data = await api.deleteUserWaitlistEntry(id);
+          if (data.success) {
+            setNotice({ title: "Deleted", message: "Waitlist entry deleted." });
+            fetchUserWaitlist();
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to delete waitlist entry." });
+          }
+        } catch (error) {
+          console.error("Error deleting user waitlist entry:", error);
+          const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
+          setNotice({ title: "Error", message: errorMessage });
+        } finally {
+          setDeletingWaitlistId(null);
+        }
+      },
+    });
   };
 
   const handleDeleteTherapistWaitlistEntry = async (id: string) => {
-    if (!confirm("Delete this therapist waitlist entry? This action cannot be undone.")) return;
-    setDeletingWaitlistId(id);
-    try {
-      const data = await api.deleteTherapistWaitlistEntry(id);
-      if (data.success) {
-        alert("Waitlist entry deleted");
-        fetchTherapistWaitlist();
-      } else {
-        alert(data.message || "Failed to delete waitlist entry");
-      }
-    } catch (error) {
-      console.error("Error deleting therapist waitlist entry:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
-      alert(errorMessage);
-    } finally {
-      setDeletingWaitlistId(null);
-    }
+    setConfirmState({
+      open: true,
+      title: "Delete waitlist entry",
+      message: "Delete this therapist waitlist entry? This action cannot be undone.",
+      confirmText: "Delete",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        setDeletingWaitlistId(id);
+        try {
+          const data = await api.deleteTherapistWaitlistEntry(id);
+          if (data.success) {
+            setNotice({ title: "Deleted", message: "Waitlist entry deleted." });
+            fetchTherapistWaitlist();
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to delete waitlist entry." });
+          }
+        } catch (error) {
+          console.error("Error deleting therapist waitlist entry:", error);
+          const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
+          setNotice({ title: "Error", message: errorMessage });
+        } finally {
+          setDeletingWaitlistId(null);
+        }
+      },
+    });
   };
 
   const therapists = activeTab === "pending" ? pendingTherapists : activeTab === "approved" ? approvedTherapists : [];
@@ -903,6 +962,61 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      <ModalDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        onClose={() => {
+          if (isConfirmBusy) return;
+          setConfirmState({ open: false, title: "", message: "" });
+        }}
+        closeOnOverlayClick={!isConfirmBusy}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmState({ open: false, title: "", message: "" })}
+              disabled={isConfirmBusy}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={confirmState.confirmVariant || "default"}
+              onClick={async () => {
+                if (!confirmState.onConfirm) {
+                  setConfirmState({ open: false, title: "", message: "" });
+                  return;
+                }
+                setIsConfirmBusy(true);
+                try {
+                  await confirmState.onConfirm();
+                } finally {
+                  setIsConfirmBusy(false);
+                  setConfirmState({ open: false, title: "", message: "" });
+                }
+              }}
+              disabled={isConfirmBusy}
+            >
+              {isConfirmBusy ? "Please wait..." : confirmState.confirmText || "Confirm"}
+            </Button>
+          </>
+        }
+      >
+        <p>{confirmState.message}</p>
+      </ModalDialog>
+
+      <ModalDialog
+        open={!!notice}
+        title={notice?.title || ""}
+        onClose={() => setNotice(null)}
+        actions={
+          <Button variant="default" onClick={() => setNotice(null)}>
+            OK
+          </Button>
+        }
+      >
+        <p>{notice?.message}</p>
+      </ModalDialog>
     </div>
   );
 }

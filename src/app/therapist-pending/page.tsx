@@ -10,10 +10,12 @@ import Image from "next/image";
 import salviorisLogo from "../../assets/salvioris.jpg";
 import { api, Therapist } from "../lib/api";
 import styles from "./TherapistPending.module.scss";
+import { ModalDialog } from "../components/ui/ModalDialog";
 
 export default function TherapistPendingPage() {
   const router = useRouter();
   const [therapistData, setTherapistData] = useState<Therapist | null>(null);
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
 
   useEffect(() => {
     // Get therapist data from localStorage
@@ -42,14 +44,14 @@ export default function TherapistPendingPage() {
         const updatedTherapist: Therapist = { ...therapistData, is_approved: true };
         localStorage.setItem("therapist", JSON.stringify(updatedTherapist));
         // Show success message and redirect to signin
-        alert("Great news! Your application has been approved. You can now sign in.");
+        setNotice({ title: "Approved!", message: "Great news! Your application has been approved. You can now sign in." });
         router.push("/therapist-signin");
       } else {
-        alert("Your application is still pending approval. We'll notify you via email once it's reviewed.");
+        setNotice({ title: "Still pending", message: "Your application is still pending approval. We'll notify you via email once it's reviewed." });
       }
     } catch (error) {
       console.error("Error checking status:", error);
-      alert("Unable to check status. Please try again later.");
+      setNotice({ title: "Error", message: "Unable to check status. Please try again later." });
     }
   };
 
@@ -143,6 +145,19 @@ export default function TherapistPendingPage() {
           </Card>
         </div>
       </div>
+
+      <ModalDialog
+        open={!!notice}
+        title={notice?.title || ""}
+        onClose={() => setNotice(null)}
+        actions={
+          <Button variant="default" onClick={() => setNotice(null)}>
+            OK
+          </Button>
+        }
+      >
+        <p>{notice?.message}</p>
+      </ModalDialog>
     </div>
   );
 }
