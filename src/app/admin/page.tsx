@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, Lock, LogOut } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, Lock, LogOut, Trash2 } from "lucide-react";
 import styles from "./Admin.module.scss";
 
 interface Therapist {
@@ -82,12 +82,14 @@ export default function AdminDashboard() {
   const [isSiteLocked, setIsSiteLocked] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [deletingWaitlistId, setDeletingWaitlistId] = useState<string | null>(null);
 
   // Check authentication first, before anything else
   useEffect(() => {
     if (typeof window !== "undefined") {
       const admin = localStorage.getItem("admin");
-      if (!admin) {
+      const token = localStorage.getItem("admin_token");
+      if (!admin || !token) {
         // Redirect immediately if not authenticated
         window.location.replace("/admin-login");
         return;
@@ -133,6 +135,7 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     if (confirm("Are you sure you want to logout?")) {
       localStorage.removeItem("admin");
+      localStorage.removeItem("admin_token");
       window.location.href = "/admin-login";
     }
   };
@@ -284,6 +287,46 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error rejecting therapist:", error);
       alert("Failed to reject therapist");
+    }
+  };
+
+  const handleDeleteUserWaitlistEntry = async (id: string) => {
+    if (!confirm("Delete this user waitlist entry? This action cannot be undone.")) return;
+    setDeletingWaitlistId(id);
+    try {
+      const data = await api.deleteUserWaitlistEntry(id);
+      if (data.success) {
+        alert("Waitlist entry deleted");
+        fetchUserWaitlist();
+      } else {
+        alert(data.message || "Failed to delete waitlist entry");
+      }
+    } catch (error) {
+      console.error("Error deleting user waitlist entry:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
+      alert(errorMessage);
+    } finally {
+      setDeletingWaitlistId(null);
+    }
+  };
+
+  const handleDeleteTherapistWaitlistEntry = async (id: string) => {
+    if (!confirm("Delete this therapist waitlist entry? This action cannot be undone.")) return;
+    setDeletingWaitlistId(id);
+    try {
+      const data = await api.deleteTherapistWaitlistEntry(id);
+      if (data.success) {
+        alert("Waitlist entry deleted");
+        fetchTherapistWaitlist();
+      } else {
+        alert(data.message || "Failed to delete waitlist entry");
+      }
+    } catch (error) {
+      console.error("Error deleting therapist waitlist entry:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
+      alert(errorMessage);
+    } finally {
+      setDeletingWaitlistId(null);
     }
   };
 
@@ -513,6 +556,16 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </div>
+                    <div className={styles.actions}>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteUserWaitlistEntry(entry.id)}
+                        disabled={deletingWaitlistId === entry.id}
+                      >
+                        <Trash2 className={styles.buttonIcon} />
+                        {deletingWaitlistId === entry.id ? "Deleting..." : "Delete"}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -562,6 +615,16 @@ export default function AdminDashboard() {
                           <span>{entry.ip_address}</span>
                         </div>
                       )}
+                    </div>
+                    <div className={styles.actions}>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteTherapistWaitlistEntry(entry.id)}
+                        disabled={deletingWaitlistId === entry.id}
+                      >
+                        <Trash2 className={styles.buttonIcon} />
+                        {deletingWaitlistId === entry.id ? "Deleting..." : "Delete"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

@@ -32,7 +32,6 @@ export function Footer() {
   };
 
   const socialLinks = [
-    { icon: Facebook, href: "#", label: "Facebook" },
     { icon: Twitter, href: "#", label: "Twitter" },
     { icon: Instagram, href: "#", label: "Instagram" },
     { icon: Linkedin, href: "#", label: "LinkedIn" },
@@ -67,10 +66,10 @@ export function Footer() {
 
             {/* Contact Info */}
             <div className="space-y-2 text-sm">
-              <div className="flex items-center space-x-2 text-muted-foreground">
+              {/* <div className="flex items-center space-x-2 text-muted-foreground">
                 <Phone className="w-4 h-4" />
                 <span>1-800-SALVIORIS</span>
-              </div>
+              </div> */}
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="w-4 h-4" />
                 <span>support@salvioris.com</span>

@@ -1,5 +1,12 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
+function getAdminAuthHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("admin_token");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
 export interface ApiError {
   message: string;
   status?: number;
@@ -667,6 +674,36 @@ export const api = {
 
   getTherapistWaitlist: async () => {
     const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/therapist`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  deleteUserWaitlistEntry: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/user?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAdminAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  deleteTherapistWaitlistEntry: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/therapist?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAdminAuthHeaders(),
+      },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;

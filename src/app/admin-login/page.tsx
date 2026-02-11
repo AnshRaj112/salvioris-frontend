@@ -40,6 +40,9 @@ export default function AdminLoginPage() {
       if (response.success) {
         // Store admin data in localStorage
         localStorage.setItem("admin", JSON.stringify(response.admin));
+        if (response.token) {
+          localStorage.setItem("admin_token", response.token);
+        }
         // Redirect to admin dashboard
         router.push("/admin");
       } else {
