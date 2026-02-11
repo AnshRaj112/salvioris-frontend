@@ -20,6 +20,7 @@ import {
 import Image from "next/image";
 import salviorisLogo from "../../assets/salvioris.jpg";
 import { api, ApiError } from "../lib/api";
+import { storeUserColor } from "../lib/userColor";
 import styles from "./Signup.module.scss";
 
 export default function SignupClient() {
@@ -140,7 +141,18 @@ export default function SignupClient() {
       const response = await api.privacySignup(signupData);
       if (response.success) {
         // Store user data in localStorage
-        localStorage.setItem("user", JSON.stringify(response.user));
+        const userData = response.user;
+        localStorage.setItem("user", JSON.stringify(userData));
+        
+        // Generate and store user color
+        if (userData && userData.id) {
+          storeUserColor(userData.id);
+        }
+        
+        // Store session token if provided
+        if (response.session_token || response.token) {
+          localStorage.setItem("session_token", response.session_token || response.token || "");
+        }
         // Redirect to desired page or home
         const redirect = searchParams.get("redirect") || "/home";
         router.push(redirect);

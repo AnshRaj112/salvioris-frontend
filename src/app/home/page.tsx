@@ -94,6 +94,17 @@ export default function HomePage() {
     }
   };
 
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user");
+      localStorage.removeItem("session_token");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_color");
+    }
+    setUser(null);
+    router.push("/signin");
+  };
+
   return (
     <div className={styles.homePage}>
       <div className={styles.container}>
@@ -104,6 +115,11 @@ export default function HomePage() {
               Choose how you want to release what you&apos;re feeling right now—vent
               freely or journal quietly, with your past reflections close by.
             </p>
+          </div>
+          <div className={styles.headerActions}>
+            <Button variant="outline" onClick={handleLogout}>
+              Logout
+            </Button>
           </div>
         </div>
 
@@ -173,6 +189,16 @@ export default function HomePage() {
                 </div>
               )}
             </div>
+          </div>
+
+          <div className={styles.communityCard}>
+            <div className={styles.cardTitle}>Community Forum</div>
+            <div className={styles.cardText}>
+              Join public groups and chat with others in a safe, supportive community space.
+            </div>
+            <Button asChild variant="healing">
+              <Link href="/community">Go to Community</Link>
+            </Button>
           </div>
         </div>
 

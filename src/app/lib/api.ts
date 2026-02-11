@@ -17,6 +17,7 @@ export interface ApiResponse<T> {
   message: string;
   user?: T;
   token?: string;
+  session_token?: string; // Privacy-first auth uses session_token
 }
 
 // Privacy-first auth interfaces
@@ -726,6 +727,275 @@ export const api = {
       throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
     return responseData;
+  },
+};
+
+// Group community forum interfaces
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  created_by: string;
+  created_at: string;
+  member_count: number;
+  is_public: boolean;
+  tags?: string[];
+}
+
+export interface CreateGroupData {
+  name: string;
+  description?: string;
+  tags?: string[];
+}
+
+export interface CreateGroupResponse {
+  success: boolean;
+  message: string;
+  group?: Group;
+}
+
+export interface GetGroupsResponse {
+  success: boolean;
+  groups: Group[];
+  total: number;
+}
+
+export interface JoinGroupResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface GroupMember {
+  user_id: string;
+  username: string;
+  joined_at: string;
+}
+
+export interface GetGroupMembersResponse {
+  success: boolean;
+  members: GroupMember[];
+  total: number;
+}
+
+export interface GroupMessage {
+  id: string;
+  message: string;
+  created_at: string;
+  user_id: string;
+  username: string;
+  group_id?: string;
+}
+
+export interface GetGroupMessagesResponse {
+  success: boolean;
+  messages: GroupMessage[];
+  has_more: boolean;
+  total: number;
+}
+
+export interface SendGroupMessageData {
+  message: string;
+}
+
+export interface SendGroupMessageResponse {
+  success: boolean;
+  message: string;
+  msg?: GroupMessage;
+}
+
+export interface UpdateGroupData {
+  id: string;
+  name: string;
+  description?: string;
+  tags?: string[];
+}
+
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("session_token");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+// Group community forum API functions
+export const groupApi = {
+  createGroup: async (data: CreateGroupData): Promise<CreateGroupResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+    
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as CreateGroupResponse;
+  },
+
+  getGroups: async (limit?: number, skip?: number, search?: string, tag?: string): Promise<GetGroupsResponse> => {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (skip) params.append('skip', skip.toString());
+    if (search && search.trim()) params.append('q', search.trim());
+    if (tag && tag.trim()) params.append('tag', tag.trim());
+    
+    const url = `${API_BASE_URL}/api/groups${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    let data: any = null;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        // Backend returned an empty body or invalid JSON
+        throw {
+          message: `Invalid JSON response from /api/groups (status ${response.status})`,
+          status: response.status,
+        } as ApiError;
+      }
+    } else {
+      const text = await response.text();
+      throw {
+        message: text || `HTTP error! status: ${response.status}`,
+        status: response.status,
+      } as ApiError;
+    }
+    
+    if (!response.ok) {
+      throw {
+        message: data.message || `HTTP error! status: ${response.status}`,
+        status: response.status,
+      } as ApiError;
+    }
+
+    // Ensure groups is always an array
+    return {
+      success: data.success || false,
+      groups: Array.isArray(data.groups) ? data.groups : [],
+      total: data.total || 0,
+    } as GetGroupsResponse;
+  },
+
+  joinGroup: async (groupId: string): Promise<JoinGroupResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups/join?group_id=${encodeURIComponent(groupId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as JoinGroupResponse;
+  },
+
+  getGroupMembers: async (groupId: string): Promise<GetGroupMembersResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups/members?group_id=${encodeURIComponent(groupId)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    // Ensure members is always an array
+    return {
+      success: data.success || false,
+      members: Array.isArray(data.members) ? data.members : [],
+      total: data.total || 0,
+    } as GetGroupMembersResponse;
+  },
+
+  getGroupMessages: async (groupId: string, limit?: number, skip?: number): Promise<GetGroupMessagesResponse> => {
+    const params = new URLSearchParams();
+    params.append('group_id', groupId);
+    if (limit) params.append('limit', limit.toString());
+    if (skip) params.append('skip', skip.toString());
+    
+    const response = await fetch(`${API_BASE_URL}/api/groups/messages?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    // Ensure messages is always an array
+    return {
+      success: data.success || false,
+      messages: Array.isArray(data.messages) ? data.messages : [],
+      has_more: data.has_more || false,
+      total: data.total || 0,
+    } as GetGroupMessagesResponse;
+  },
+
+  sendGroupMessage: async (groupId: string, data: SendGroupMessageData): Promise<SendGroupMessageResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups/messages?group_id=${encodeURIComponent(groupId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+    
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as SendGroupMessageResponse;
+  },
+
+  updateGroup: async (data: UpdateGroupData): Promise<{ success: boolean; message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as { success: boolean; message: string };
+  },
+
+  deleteGroup: async (groupId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups?group_id=${encodeURIComponent(groupId)}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as { success: boolean; message: string };
   },
 };
 

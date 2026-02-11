@@ -1,0 +1,491 @@
+.communityPage {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1d2935 0%, #283848 100%);
+  padding: 1.5rem 1rem;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: calc(100vh - 3rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    text-align: left;
+    margin-bottom: 1rem;
+
+    .headerTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+      position: relative;
+
+      .title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+      }
+
+      .homeLink {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: hsl(var(--card) / 0.3);
+        backdrop-filter: blur(8px);
+        border: 1px solid hsl(var(--border));
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        font-weight: 500;
+
+        &:hover {
+          background: hsl(var(--card) / 0.5);
+          transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+          position: static;
+          margin-top: 0.5rem;
+        }
+      }
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .searchRow {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+
+      .searchInput {
+        flex: 1;
+      }
+    }
+
+    .tagsFilter {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+  }
+
+  // Reusable tag chip styles (used in header filter and edit/create cards)
+  .tagChip {
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.4);
+    font-size: 0.7rem;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .tagChipActive {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: hsl(var(--primary));
+  }
+
+  .errorMessage {
+    background: #fee;
+    color: #c33;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #c33;
+    }
+  }
+
+  .mainContent {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0.75rem;
+    background: #111b21;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sidebar {
+    background: #111b21;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .sidebarHeader {
+      padding: 1.5rem;
+      border-bottom: 1px solid hsl(var(--border));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        color: hsl(var(--foreground));
+      }
+
+      .createButton {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        
+        // Match signup page button styling (healing variant)
+        // The healing variant already has the gradient and styling
+      }
+    }
+
+    .createGroupCard {
+      margin: 1rem;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card) / 0.95);
+
+      .input {
+        margin-bottom: 1rem;
+      }
+
+      .buttonGroup {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .submitButton {
+        flex: 1;
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        transition: all 0.2s;
+        
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+          background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+        }
+        
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .tagsSelector {
+        margin-top: 0.75rem;
+
+        .tagsLabel {
+          font-size: 0.8rem;
+          color: hsl(var(--muted-foreground));
+          margin-bottom: 0.25rem;
+        }
+
+        .tagsChips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+        }
+      }
+    }
+
+    .groupList {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+
+      .loading,
+      .emptyState {
+        text-align: center;
+        padding: 2rem;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .groupItem {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+        background: hsl(var(--muted) / 0.3);
+
+        &:hover {
+          background: hsl(var(--muted) / 0.5);
+          border-color: hsl(var(--border));
+        }
+
+        &.active {
+          background: hsl(var(--primary) / 0.2);
+          border-color: hsl(var(--primary));
+        }
+
+        .groupInfo {
+          h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: hsl(var(--foreground));
+          }
+
+          p {
+            font-size: 0.9rem;
+            color: hsl(var(--muted-foreground));
+            margin: 0 0 0.75rem 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .groupMeta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: hsl(var(--muted-foreground));
+
+            span {
+              display: flex;
+              align-items: center;
+              gap: 0.25rem;
+            }
+          }
+        }
+
+        .joinButton {
+          margin-top: 0.5rem;
+          width: 100%;
+        }
+
+        .creatorActions {
+          margin-top: 0.5rem;
+          display: flex;
+          gap: 0.5rem;
+
+          .editButton {
+            flex: 1;
+            font-size: 0.8rem;
+            background: #00a884;
+            border-color: #00a884;
+            color: white;
+
+            &:hover {
+              background: #029174;
+              border-color: #029174;
+            }
+          }
+
+          .deleteButton {
+            flex: 1;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+
+  .chatArea {
+    background: #202c33;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .chatHeader {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .backButton {
+        @media (min-width: 769px) {
+          display: none;
+        }
+      }
+
+      .chatHeaderInfo {
+        flex: 1;
+
+        h2 {
+          font-size: 1rem;
+          font-weight: 600;
+          margin: 0 0 0.25rem 0;
+          color: hsl(var(--foreground));
+        }
+
+        p {
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.6);
+          margin: 0 0 0.5rem 0;
+        }
+
+        span {
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.5);
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+      }
+
+      .joinButton {
+        margin-left: auto;
+      }
+    }
+
+    .messagesContainer {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .loading,
+      .emptyState {
+        text-align: center;
+        padding: 2rem;
+        color: hsl(var(--muted-foreground));
+        margin: auto;
+      }
+
+      .message {
+        padding: 0.45rem 0.75rem;
+        border-radius: 10px;
+        background: #202c33;
+        max-width: 70%;
+        align-self: flex-start;
+        transition: all 0.2s;
+
+        &.ownMessage {
+          align-self: flex-end;
+          color: white;
+          background: #005c4b;
+
+          .messageHeader {
+            .username,
+            .timestamp {
+              color: rgba(255, 255, 255, 0.9);
+            }
+          }
+        }
+
+        .messageHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.5rem;
+          font-size: 0.85rem;
+
+          .username {
+            font-weight: 600;
+          }
+
+          .timestamp {
+            color: rgba(240, 240, 240, 0.55);
+            font-size: 0.75rem;
+          }
+        }
+
+        .messageContent {
+          word-wrap: break-word;
+          line-height: 1.5;
+        }
+      }
+    }
+
+    .messageInput {
+      padding: 0.75rem 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      background: #202c33;
+
+      .inputWrapper {
+        display: flex;
+        gap: 0.5rem;
+
+        .input {
+          flex: 1;
+        }
+
+        .sendButton {
+          min-width: 48px;
+        }
+      }
+
+      .authPrompt {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: #fff3cd;
+        border-radius: 8px;
+        color: #856404;
+        font-size: 0.9rem;
+        text-align: center;
+        justify-content: center;
+
+        a {
+          color: #2196f3;
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .emptyChat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--muted-foreground));
+      padding: 3rem;
+
+      h2 {
+        font-size: 1.5rem;
+        margin: 1rem 0 0.5rem 0;
+        color: hsl(var(--foreground));
+      }
+
+      p {
+        text-align: center;
+        max-width: 400px;
+        color: hsl(var(--muted-foreground));
+      }
+    }
+  }
+}
+

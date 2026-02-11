@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "../ui/ChatCard";
 import { Input } from "../ui/input";
 import { Send, Phone, Video, MoreVertical, Heart } from "lucide-react";
 import styles from "./scss/ChatInterface.module.scss";
+import { formatChatTime } from "@/app/lib/time";
 
 const ChatInterface = () => {
   const [message, setMessage] = useState("");
@@ -16,32 +17,37 @@ const ChatInterface = () => {
       sender: "therapist",
       content: "Hello! I'm so glad you decided to reach out today. How are you feeling right now?",
       time: "2:30 PM",
+      timestamp: new Date().toISOString(),
       senderName: "Dr. Sarah Chen"
     },
     {
       id: 2,
       sender: "user",
       content: "Hi Dr. Chen. I've been feeling really overwhelmed lately with work and everything going on in my life.",
-      time: "2:32 PM"
+      time: "2:32 PM",
+      timestamp: new Date().toISOString(),
     },
     {
       id: 3,
       sender: "therapist",
       content: "I hear you, and it's completely understandable to feel overwhelmed. You're not alone in this. Can you tell me a bit more about what specifically has been weighing on your mind?",
       time: "2:33 PM",
+      timestamp: new Date().toISOString(),
       senderName: "Dr. Sarah Chen"
     },
     {
       id: 4,
       sender: "user",
       content: "It's mainly the pressure at work. I feel like I'm constantly behind and can't catch up. It's affecting my sleep and I find myself worrying all the time.",
-      time: "2:35 PM"
+      time: "2:35 PM",
+      timestamp: new Date().toISOString(),
     },
     {
       id: 5,
       sender: "therapist",
       content: "Thank you for sharing that with me. Work-related stress can definitely impact our overall well-being, including sleep patterns. Let's work together to develop some coping strategies. Have you noticed any particular triggers that make the anxiety worse?",
       time: "2:37 PM",
+      timestamp: new Date().toISOString(),
       senderName: "Dr. Sarah Chen"
     }
   ];
@@ -113,10 +119,12 @@ const ChatInterface = () => {
                       <p className={styles.senderName}>{msg.senderName}</p>
                     )}
                     <p className={styles.messageContent}>{msg.content}</p>
-                    <p className={`${styles.messageTime} ${
-                      msg.sender === 'user' ? styles.user : styles.therapist
-                    }`}>
-                      {msg.time}
+                    <p
+                      className={`${styles.messageTime} ${
+                        msg.sender === "user" ? styles.user : styles.therapist
+                      }`}
+                    >
+                      {msg.timestamp ? formatChatTime(msg.timestamp) : msg.time}
                     </p>
                   </div>
                 </div>

@@ -25,6 +25,12 @@
   gap: 1rem;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .header {
   text-align: left;
 }
@@ -55,7 +61,8 @@
 }
 
 .ventCard,
-.journalCard {
+.journalCard,
+.communityCard {
   flex: 1 1 260px;
   background: hsl(var(--card) / 0.9);
   border-radius: 1rem;
