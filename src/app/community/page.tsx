@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { groupApi, Group, GroupMessage, ApiError } from "../lib/api";
 import { getUserColor } from "../lib/userColor";
+import { formatChatTime } from "../lib/time";
 import styles from "./Community.module.scss";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -31,7 +32,7 @@ const PREDEFINED_TAGS = [
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-export default function CommunityPage() {
+function CommunityPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
@@ -58,6 +59,8 @@ export default function CommunityPage() {
   const isFetchingMessagesRef = useRef(false);
   const socketRef = useRef<WebSocket | null>(null);
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Check if user is logged in
   const checkAuth = useCallback(() => {
@@ -153,6 +156,19 @@ export default function CommunityPage() {
       return next;
     });
   }, [user, groups]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      
+      // Only auto-scroll if user is near the bottom (within 100px)
+      if (isNearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [messages]);
 
   // Connect WebSocket and load history when group is selected
   useEffect(() => {
@@ -290,6 +306,12 @@ export default function CommunityPage() {
       isFetchingMessagesRef.current = true;
       const response = await groupApi.getGroupMessages(groupId, 100, 0);
       setMessages(response.messages || []);
+      // Scroll to bottom after loading messages
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+        }
+      }, 100);
     } catch (err) {
       const apiError = err as ApiError;
       console.error("Failed to load messages:", apiError.message);
@@ -520,20 +542,8 @@ export default function CommunityPage() {
   };
 
   const formatTime = (dateString: string) => {
-    // Interpret the backend timestamp once and render a stable time
-    // that matches what the server records, without double timezone shifts.
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return "";
-
-    // Use UTC hours/minutes so we don't apply the viewer's timezone offset
-    // on top of the server's stored time.
-    const hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
-
-    const hh = hours.toString().padStart(2, "0");
-    const mm = minutes.toString().padStart(2, "0");
-
-    return `${hh}:${mm}`;
+    // Use the shared time formatter that converts to user's local timezone
+    return formatChatTime(dateString);
   };
 
   const isUserMember = (groupId: string) => {
@@ -892,59 +902,62 @@ export default function CommunityPage() {
                 </div>
 
                 {/* Messages */}
-                <div className={styles.messagesContainer}>
+                <div className={styles.messagesContainer} ref={messagesContainerRef}>
                   {messages.length === 0 ? (
                     <div className={styles.emptyState}>
                       No messages yet. Be the first to say something!
                     </div>
                   ) : (
-                    messages.map((msg) => {
-                      const userColor = getUserColor(msg.user_id);
-                      const isOwnMessage = msg.user_id === user?.id;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`${styles.message} ${
-                            isOwnMessage ? styles.ownMessage : ""
-                          }`}
-                          style={{
-                            backgroundColor: isOwnMessage ? userColor : "#f5f5f5",
-                            borderLeft: isOwnMessage ? "none" : `4px solid ${userColor}`,
-                          }}
-                        >
-                          <div className={styles.messageHeader}>
-                            <span
-                              className={styles.username}
-                              style={{
-                                color: isOwnMessage
-                                  ? "rgba(255, 255, 255, 0.95)"
-                                  : userColor,
-                              }}
-                            >
-                              {msg.username}
-                            </span>
-                            <span
-                              className={styles.timestamp}
-                              style={{
-                                color: isOwnMessage
-                                  ? "rgba(255, 255, 255, 0.8)"
-                                  : "rgba(0, 0, 0, 0.6)",
-                              }}
-                            >
-                              {formatTime(msg.created_at)}
-                            </span>
-                          </div>
+                    <>
+                      {messages.map((msg) => {
+                        const userColor = getUserColor(msg.user_id);
+                        const isOwnMessage = msg.user_id === user?.id;
+                        return (
                           <div
-                            className={styles.messageContent}
+                            key={msg.id}
+                            className={`${styles.message} ${
+                              isOwnMessage ? styles.ownMessage : ""
+                            }`}
                             style={{
-                              color: isOwnMessage ? "white" : "#1a1a1a",
+                              backgroundColor: isOwnMessage ? userColor : "#f5f5f5",
+                              borderLeft: isOwnMessage ? "none" : `4px solid ${userColor}`,
                             }}
                           >
-                            {msg.message}
+                            <div className={styles.messageHeader}>
+                              <span
+                                className={styles.username}
+                                style={{
+                                  color: isOwnMessage
+                                    ? "rgba(255, 255, 255, 0.95)"
+                                    : userColor,
+                                }}
+                              >
+                                {msg.username}
+                              </span>
+                              <span
+                                className={styles.timestamp}
+                                style={{
+                                  color: isOwnMessage
+                                    ? "rgba(255, 255, 255, 0.8)"
+                                    : "rgba(0, 0, 0, 0.6)",
+                                }}
+                              >
+                                {formatTime(msg.created_at)}
+                              </span>
+                            </div>
+                            <div
+                              className={styles.messageContent}
+                              style={{
+                                color: isOwnMessage ? "white" : "#1a1a1a",
+                              }}
+                            >
+                              {msg.message}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </>
                   )}
                 </div>
 
@@ -1000,6 +1013,20 @@ export default function CommunityPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CommunityPage() {
+  return (
+    <Suspense fallback={
+      <div className={styles.communityPage}>
+        <div className={styles.container}>
+          <div className={styles.loading}>Loading...</div>
+        </div>
+      </div>
+    }>
+      <CommunityPageContent />
+    </Suspense>
   );
 }
 

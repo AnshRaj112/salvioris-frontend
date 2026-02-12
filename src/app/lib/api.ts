@@ -851,7 +851,7 @@ export const groupApi = {
       },
     });
     
-    let data: any = null;
+    let data: Partial<GetGroupsResponse> | null = null;
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       try {
@@ -873,12 +873,20 @@ export const groupApi = {
     
     if (!response.ok) {
       throw {
-        message: data.message || `HTTP error! status: ${response.status}`,
+        message: (data && 'message' in data ? data.message : undefined) || `HTTP error! status: ${response.status}`,
         status: response.status,
       } as ApiError;
     }
 
     // Ensure groups is always an array
+    // At this point, data should not be null since we would have thrown an error above if it was
+    if (!data) {
+      throw {
+        message: `Unexpected error: no data received`,
+        status: response.status,
+      } as ApiError;
+    }
+    
     return {
       success: data.success || false,
       groups: Array.isArray(data.groups) ? data.groups : [],

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, Lock, LogOut, Trash2 } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, LogOut, Trash2 } from "lucide-react";
 import styles from "./Admin.module.scss";
 import { ModalDialog } from "../components/ui/ModalDialog";
 
@@ -80,7 +80,6 @@ export default function AdminDashboard() {
   const [isLoadingUserWaitlist, setIsLoadingUserWaitlist] = useState(false);
   const [isLoadingTherapistWaitlist, setIsLoadingTherapistWaitlist] = useState(false);
   const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist">("pending");
-  const [isSiteLocked, setIsSiteLocked] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [deletingWaitlistId, setDeletingWaitlistId] = useState<string | null>(null);
@@ -112,10 +111,6 @@ export default function AdminDashboard() {
       // Admin is authenticated
       setIsAuthenticated(true);
       setIsCheckingAuth(false);
-      
-      // Check site lock status
-      const unlocked = localStorage.getItem("site_unlocked") === "true";
-      setIsSiteLocked(!unlocked);
     }
   }, []);
 
@@ -138,14 +133,6 @@ export default function AdminDashboard() {
       fetchTherapistWaitlist();
     }
   }, [activeTab, isAuthenticated]);
-
-  const handleToggleSiteLock = () => {
-    const newLockState = !isSiteLocked;
-    setIsSiteLocked(newLockState);
-    localStorage.setItem("site_unlocked", newLockState ? "false" : "true");
-    // Reload to apply changes
-    window.location.reload();
-  };
 
   const handleLogout = () => {
     setConfirmState({
@@ -409,23 +396,6 @@ export default function AdminDashboard() {
             <h1 className={styles.title}>Admin Dashboard</h1>
           </div>
           <div className={styles.headerRight}>
-            <Button
-              onClick={handleToggleSiteLock}
-              variant={isSiteLocked ? "default" : "destructive"}
-              className={styles.siteLockButton}
-            >
-              {isSiteLocked ? (
-                <>
-                  <Unlock className={styles.buttonIcon} />
-                  Unlock Site
-                </>
-              ) : (
-                <>
-                  <Lock className={styles.buttonIcon} />
-                  Lock Site
-                </>
-              )}
-            </Button>
             <Button
               onClick={handleLogout}
               variant="outline"

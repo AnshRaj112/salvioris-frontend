@@ -141,12 +141,14 @@ export default function SignupClient() {
       const response = await api.privacySignup(signupData);
       if (response.success) {
         // Store user data in localStorage
-        const userData = response.user;
-        localStorage.setItem("user", JSON.stringify(userData));
-        
-        // Generate and store user color
-        if (userData && userData.id) {
-          storeUserColor(userData.id);
+        const userData = response.user as { id?: string; username?: string; [key: string]: unknown } | undefined;
+        if (userData) {
+          localStorage.setItem("user", JSON.stringify(userData));
+          
+          // Generate and store user color
+          if (userData.id) {
+            storeUserColor(userData.id);
+          }
         }
         
         // Store session token if provided
