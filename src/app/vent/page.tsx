@@ -8,6 +8,7 @@ import Image from "next/image";
 import salviorisLogo from "../../assets/salvioris.jpg";
 import { api, ApiError, Vent, CreateVentResponse, Journal } from "../lib/api";
 import { Textarea } from "../components/ui/textarea";
+import { formatChatTime } from "../lib/time";
 import styles from "./Vent.module.scss";
 
 interface User {
@@ -597,7 +598,7 @@ export default function VentPage() {
                 )}
                 <div className={styles.messageContent}>{vent.message}</div>
                 <div className={styles.messageTime}>
-                  {new Date(vent.created_at).toLocaleString()}
+                  {formatChatTime(vent.created_at)}
                 </div>
               </div>
             ))}

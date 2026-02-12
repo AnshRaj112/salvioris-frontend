@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { api, ApiError, Journal } from "../lib/api";
+import { formatDateTime } from "../lib/time";
 import styles from "./Journaling.module.scss";
 
 interface User {
@@ -96,7 +97,8 @@ export default function JournalingPage() {
 
   const formatDate = (iso: string) => {
     try {
-      return new Date(iso).toLocaleString();
+      // Use the timezone-aware formatter to show dates in user's local timezone
+      return formatDateTime(iso);
     } catch {
       return iso;
     }

@@ -191,15 +191,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className={styles.communityCard}>
-            <div className={styles.cardTitle}>Community Forum</div>
-            <div className={styles.cardText}>
-              Join public groups and chat with others in a safe, supportive community space.
-            </div>
-            <Button asChild variant="healing">
-              <Link href="/community">Go to Community</Link>
-            </Button>
-          </div>
+          {/* Community forum removed */}
         </div>
 
         <div className={styles.feedbackSection}>

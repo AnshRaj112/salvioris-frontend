@@ -817,7 +817,8 @@ function getAuthHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
-// Group community forum API functions
+// Group community forum API functions (removed)
+/*
 export const groupApi = {
   createGroup: async (data: CreateGroupData): Promise<CreateGroupResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/groups`, {
@@ -1006,4 +1007,5 @@ export const groupApi = {
     return responseData as { success: boolean; message: string };
   },
 };
+*/
 

@@ -63,6 +63,7 @@ interface WaitlistEntry {
 }
 
 import { api } from "../lib/api";
+import { formatDateTime } from "../lib/time";
 
 export default function AdminDashboard() {
   const [pendingTherapists, setPendingTherapists] = useState<Therapist[]>([]);
@@ -484,7 +485,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.label}>Submitted:</span>
-                        <span>{new Date(feedback.created_at).toLocaleString()}</span>
+                        <span>{formatDateTime(feedback.created_at)}</span>
                       </div>
                       {feedback.ip_address && (
                         <div className={styles.infoItem}>
@@ -532,7 +533,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.label}>Submitted:</span>
-                        <span>{new Date(contact.created_at).toLocaleString()}</span>
+                        <span>{formatDateTime(contact.created_at)}</span>
                       </div>
                       {contact.ip_address && (
                         <div className={styles.infoItem}>
@@ -576,7 +577,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.label}>Joined:</span>
-                        <span>{new Date(entry.created_at).toLocaleString()}</span>
+                        <span>{formatDateTime(entry.created_at)}</span>
                       </div>
                       {entry.ip_address && (
                         <div className={styles.infoItem}>
@@ -636,7 +637,7 @@ export default function AdminDashboard() {
                       )}
                       <div className={styles.infoItem}>
                         <span className={styles.label}>Joined:</span>
-                        <span>{new Date(entry.created_at).toLocaleString()}</span>
+                        <span>{formatDateTime(entry.created_at)}</span>
                       </div>
                       {entry.ip_address && (
                         <div className={styles.infoItem}>
@@ -686,11 +687,11 @@ export default function AdminDashboard() {
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.label}>Blocked At:</span>
-                        <span>{new Date(blocked.created_at).toLocaleString()}</span>
+                        <span>{formatDateTime(blocked.created_at)}</span>
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.label}>Expires At:</span>
-                        <span>{new Date(blocked.expires_at).toLocaleString()}</span>
+                        <span>{formatDateTime(blocked.expires_at)}</span>
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.label}>Status:</span>
