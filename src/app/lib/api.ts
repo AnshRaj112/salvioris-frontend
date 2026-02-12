@@ -734,6 +734,7 @@ export const api = {
 export interface Group {
   id: string;
   name: string;
+  slug?: string;
   description?: string;
   created_by: string;
   created_at: string;
@@ -1008,4 +1009,152 @@ export const groupApi = {
   },
 };
 */
+
+// New Telegram-style community API
+export const groupApi = {
+  createGroup: async (data: CreateGroupData): Promise<CreateGroupResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as CreateGroupResponse;
+  },
+
+  getGroups: async (limit?: number, skip?: number, search?: string, tag?: string): Promise<GetGroupsResponse> => {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (skip) params.append('skip', skip.toString());
+    if (search && search.trim()) params.append('q', search.trim());
+    if (tag && tag.trim()) params.append('tag', tag.trim());
+
+    const url = `${API_BASE_URL}/api/groups${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+
+    return {
+      success: data.success || false,
+      groups: Array.isArray(data.groups) ? data.groups : [],
+      total: data.total || 0,
+    } as GetGroupsResponse;
+  },
+
+  joinGroup: async (groupId: string): Promise<JoinGroupResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups/join?group_id=${encodeURIComponent(groupId)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as JoinGroupResponse;
+  },
+
+  getGroupMembers: async (groupId: string): Promise<GetGroupMembersResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups/members?group_id=${encodeURIComponent(groupId)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return {
+      success: data.success || false,
+      members: Array.isArray(data.members) ? data.members : [],
+      total: data.total || 0,
+    } as GetGroupMembersResponse;
+  },
+
+  updateGroup: async (data: UpdateGroupData): Promise<{ success: boolean; message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as { success: boolean; message: string };
+  },
+
+  deleteGroup: async (groupId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/groups?group_id=${encodeURIComponent(groupId)}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+
+    const responseData = await response.json();
+    if (!response.ok) {
+      throw { message: responseData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return responseData as { success: boolean; message: string };
+  },
+};
+
+export interface ChatHistoryResponse {
+  success: boolean;
+  messages: GroupMessage[];
+  has_more: boolean;
+}
+
+export const chatApi = {
+  loadHistory: async (groupId: string, before?: string, limit?: number): Promise<ChatHistoryResponse> => {
+    const params = new URLSearchParams();
+    params.append("group_id", groupId);
+    if (before) params.append("before", before);
+    if (limit) params.append("limit", limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/api/chat/history?${params.toString()}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+
+    return {
+      success: data.success,
+      messages: data.messages || [],
+      has_more: data.has_more || false,
+    };
+  },
+};
 
