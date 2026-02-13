@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./Community.module.scss";
 import { groupApi, chatApi, Group, GroupMessage, CreateGroupData } from "../lib/api";
 import { Button } from "../components/ui/button";
@@ -16,7 +16,6 @@ interface ActiveGroup extends Group {
 
 export default function CommunityPage() {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [totalGroups, setTotalGroups] = useState(0);
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState("");
   const [activeGroup, setActiveGroup] = useState<ActiveGroup | null>(null);
@@ -124,7 +123,6 @@ export default function CommunityPage() {
       try {
         const res = await groupApi.getGroups(50, 0, search, tag);
         setGroups(res.groups);
-        setTotalGroups(res.total);
       } catch {
         // ignore for now
       }
@@ -151,7 +149,7 @@ export default function CommunityPage() {
       }
     };
     loadMembers();
-  }, [activeGroup?.id]);
+  }, [activeGroup]);
 
   // Subscribe to group over WebSocket when active group changes
   useEffect(() => {
@@ -175,14 +173,14 @@ export default function CommunityPage() {
         );
       }
     };
-  }, [activeGroup?.id]);
+  }, [activeGroup]);
 
   const activeSlug = useMemo(
     () => (activeGroup?.slug ? `/community/group/${activeGroup.slug}` : null),
     [activeGroup?.slug]
   );
 
-  const loadHistory = async (appendTop: boolean) => {
+  const loadHistory = useCallback(async (appendTop: boolean) => {
     if (!activeGroup) return;
     setLoadingHistory(true);
     try {
@@ -202,13 +200,13 @@ export default function CommunityPage() {
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, [activeGroup, messages]);
 
   useEffect(() => {
     if (activeGroup) {
       loadHistory(false);
     }
-  }, [activeGroup?.id]);
+  }, [activeGroup, loadHistory]);
 
   const handleSelectGroup = (group: Group) => {
     setActiveGroup(group);
@@ -235,14 +233,15 @@ export default function CommunityPage() {
         // Refresh list and select the new group
         const refreshed = await groupApi.getGroups(50, 0, "", "");
         setGroups(refreshed.groups);
-        setTotalGroups(refreshed.total);
         setActiveGroup(res.group);
         setCreateData({ name: "", description: "", tags: [] });
       } else {
         setCreateError(res.message || "Failed to create group.");
       }
-    } catch (e: any) {
-      setCreateError(e?.message || "Failed to create group.");
+    } catch (e: unknown) {
+      setCreateError(
+        e instanceof Error ? e.message : "Failed to create group."
+      );
     } finally {
       setCreating(false);
     }
