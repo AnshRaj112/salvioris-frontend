@@ -217,8 +217,13 @@ export default function AdminDashboard() {
         });
       }
     } catch (e) {
-      console.error("Error fetching insights:", e);
-      setNotice({ title: "Error", message: "Failed to load insights." });
+      const err = e as { message?: string; status?: number };
+      const msg = err?.message || (e instanceof Error ? e.message : String(e));
+      console.error("Error fetching insights:", msg, err?.status ?? "", e);
+      setNotice({
+        title: "Error",
+        message: msg || "Failed to load insights. Check network and admin auth.",
+      });
       setInsights(null);
     } finally {
       setInsightsLoading(false);
@@ -737,7 +742,7 @@ export default function AdminDashboard() {
 
         {activeTab === "users" ? (
           isLoadingUsers ? (
-            <div className={styles.loading}>Loading users...</div>
+            <div className={styles.contentLoading}>Loading users...</div>
           ) : users.length === 0 ? (
             <div className={styles.emptyState}>
               <Users className={styles.emptyIcon} />
@@ -785,7 +790,7 @@ export default function AdminDashboard() {
           )
         ) : activeTab === "feedback" ? (
           isLoadingFeedbacks ? (
-            <div className={styles.loading}>Loading feedbacks...</div>
+            <div className={styles.contentLoading}>Loading feedbacks...</div>
           ) : feedbacks.length === 0 ? (
             <div className={styles.emptyState}>
               <MessageSquare className={styles.emptyIcon} />
@@ -834,7 +839,7 @@ export default function AdminDashboard() {
           )
         ) : activeTab === "contact" ? (
           isLoadingContacts ? (
-            <div className={styles.loading}>Loading contacts...</div>
+            <div className={styles.contentLoading}>Loading contacts...</div>
           ) : contacts.length === 0 ? (
             <div className={styles.emptyState}>
               <Contact className={styles.emptyIcon} />
@@ -892,7 +897,7 @@ export default function AdminDashboard() {
           )
         ) : activeTab === "userWaitlist" ? (
           isLoadingUserWaitlist ? (
-            <div className={styles.loading}>Loading user waitlist...</div>
+            <div className={styles.contentLoading}>Loading user waitlist...</div>
           ) : userWaitlist.length === 0 ? (
             <div className={styles.emptyState}>
               <Users className={styles.emptyIcon} />
@@ -946,7 +951,7 @@ export default function AdminDashboard() {
           )
         ) : activeTab === "therapistWaitlist" ? (
           isLoadingTherapistWaitlist ? (
-            <div className={styles.loading}>Loading therapist waitlist...</div>
+            <div className={styles.contentLoading}>Loading therapist waitlist...</div>
           ) : therapistWaitlist.length === 0 ? (
             <div className={styles.emptyState}>
               <UserCheck className={styles.emptyIcon} />
@@ -1006,7 +1011,7 @@ export default function AdminDashboard() {
           )
         ) : activeTab === "groups" ? (
           adminGroupsLoading ? (
-            <div className={styles.loading}>Loading community groups...</div>
+            <div className={styles.contentLoading}>Loading community groups...</div>
           ) : adminGroups.length === 0 ? (
             <div className={styles.emptyState}>
               <MessageCircle className={styles.emptyIcon} />
@@ -1067,7 +1072,7 @@ export default function AdminDashboard() {
           )
         ) : activeTab === "insights" ? (
           insightsLoading ? (
-            <div className={styles.loading}>Loading insights...</div>
+            <div className={styles.contentLoading}>Loading insights...</div>
           ) : !insights && !insightsFrom && !insightsTo ? (
             <div className={styles.emptyState}>
               <BarChart3 className={styles.emptyIcon} />
@@ -1220,7 +1225,7 @@ export default function AdminDashboard() {
           )
         ) : activeTab === "blocked" ? (
           isLoadingIPs ? (
-            <div className={styles.loading}>Loading blocked IPs...</div>
+            <div className={styles.contentLoading}>Loading blocked IPs...</div>
           ) : blockedIPs.length === 0 ? (
             <div className={styles.emptyState}>
               <Ban className={styles.emptyIcon} />
@@ -1274,7 +1279,7 @@ export default function AdminDashboard() {
             </div>
           )
         ) : isLoading ? (
-          <div className={styles.loading}>Loading therapists...</div>
+          <div className={styles.contentLoading}>Loading therapists...</div>
         ) : therapists.length === 0 ? (
           <div className={styles.emptyState}>
             <p>No {activeTab === "pending" ? "pending" : "approved"} therapists found.</p>
