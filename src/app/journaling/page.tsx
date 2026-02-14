@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MessageSquare } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
@@ -29,6 +30,18 @@ export default function JournalingPage() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+
+  useEffect(() => {
+    if (showFeedbackForm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showFeedbackForm]);
 
   // Ensure only logged-in users can access this page
   useEffect(() => {
@@ -136,6 +149,27 @@ export default function JournalingPage() {
 
   return (
     <div className={styles.journalingPage}>
+      {/* Feedback CTA bar - top of page, opens popup on click */}
+      <div className={styles.feedbackSection}>
+        <button
+          type="button"
+          className={styles.feedbackCta}
+          onClick={() => setShowFeedbackForm(true)}
+        >
+          <MessageSquare className={styles.feedbackCtaIcon} size={20} strokeWidth={1.75} />
+          <div className={styles.feedbackCtaContent}>
+            <span className={styles.feedbackCtaLabel}>Help us improve</span>
+            <span className={styles.feedbackCtaText}>
+              Tell us how this journaling space feels or what could make it more supportive
+            </span>
+          </div>
+          <span className={styles.feedbackCtaButton}>
+            Share feedback →
+          </span>
+        </button>
+      </div>
+
+      <div className={styles.mainContent}>
       <div className={styles.container}>
         <div className={styles.header}>
           <div className={styles.headerTop}>
@@ -235,42 +269,98 @@ export default function JournalingPage() {
             ))
           )}
         </div>
-
-        <div className={styles.feedbackSection}>
-          <h2 className={styles.feedbackTitle}>Leave Feedback</h2>
-          <p className={styles.feedbackSubtitle}>
-            Tell us how this journaling space feels for you or what could make it more supportive.
-          </p>
-          <form onSubmit={handleFeedbackSubmit} className={styles.feedbackForm}>
-            <Textarea
-              value={feedback}
-              onChange={(e) => {
-                setFeedback(e.target.value);
-                setFeedbackMessage(null);
-                setFeedbackError(null);
-              }}
-              rows={4}
-              placeholder="Share any thoughts about journaling here..."
-              className={styles.feedbackTextarea}
-            />
-            <div className={styles.feedbackActions}>
-              <Button
-                type="submit"
-                variant="healing"
-                disabled={isSubmittingFeedback || !feedback.trim()}
-              >
-                {isSubmittingFeedback ? "Submitting..." : "Submit Feedback"}
-              </Button>
-            </div>
-            {feedbackMessage && (
-              <div className={styles.feedbackMessage}>{feedbackMessage}</div>
-            )}
-            {feedbackError && (
-              <div className={styles.feedbackError}>{feedbackError}</div>
-            )}
-          </form>
-        </div>
       </div>
+      </div>
+
+      {showFeedbackForm && (
+        <div
+          className={styles.feedbackModal}
+          onClick={() => {
+            if (!isSubmittingFeedback) {
+              setShowFeedbackForm(false);
+              setFeedback("");
+              setFeedbackError(null);
+              setFeedbackMessage(null);
+            }
+          }}
+        >
+          <div
+            className={styles.feedbackModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {feedbackMessage ? (
+              <div className={styles.feedbackSuccess}>
+                <span className={styles.feedbackSuccessIcon}>✓</span>
+                <span>{feedbackMessage}</span>
+                <div className={styles.feedbackSuccessActions}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setFeedbackMessage(null);
+                      setFeedback("");
+                      setShowFeedbackForm(false);
+                    }}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="healing"
+                    onClick={() => {
+                      setFeedbackMessage(null);
+                      setFeedback("");
+                    }}
+                  >
+                    Share more
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleFeedbackSubmit} className={styles.feedbackForm}>
+                <div className={styles.feedbackFormHeader}>
+                  <h3 className={styles.feedbackFormTitle}>Share your feedback</h3>
+                  <p className={styles.feedbackFormSubtitle}>
+                    Tell us how this journaling space feels or what could make it more supportive
+                  </p>
+                </div>
+                <Textarea
+                  value={feedback}
+                  onChange={(e) => {
+                    setFeedback(e.target.value);
+                    setFeedbackError(null);
+                  }}
+                  rows={4}
+                  placeholder="Share any thoughts about journaling here..."
+                  className={styles.feedbackTextarea}
+                />
+                <div className={styles.feedbackActions}>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => {
+                      setShowFeedbackForm(false);
+                      setFeedback("");
+                      setFeedbackError(null);
+                    }}
+                    disabled={isSubmittingFeedback}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="healing"
+                    disabled={isSubmittingFeedback || !feedback.trim()}
+                  >
+                    {isSubmittingFeedback ? "Submitting..." : "Submit feedback"}
+                  </Button>
+                </div>
+                {feedbackError && (
+                  <div className={styles.feedbackError}>{feedbackError}</div>
+                )}
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {selectedJournal && showJournalModal && (
         <div

@@ -304,7 +304,7 @@ export default function HomePage() {
                 <div className={styles.feedbackActions}>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="destructive"
                     onClick={() => {
                       setShowFeedbackForm(false);
                       setFeedback("");
