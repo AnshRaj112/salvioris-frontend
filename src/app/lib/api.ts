@@ -517,7 +517,7 @@ export const api = {
     if (contentType && contentType.includes('application/json')) {
       try {
         responseData = await response.json();
-      } catch (e) {
+      } catch {
         const text = await response.text();
         throw { message: `Invalid JSON response: ${text.substring(0, 100)}`, status: response.status } as ApiError;
       }
@@ -550,7 +550,7 @@ export const api = {
     if (contentType && contentType.includes('application/json')) {
       try {
         data = await response.json();
-      } catch (e) {
+      } catch {
         const text = await response.text();
         throw { message: `Invalid JSON response: ${text.substring(0, 100)}`, status: response.status } as ApiError;
       }
@@ -669,7 +669,7 @@ export const api = {
     if (contentType && contentType.includes('application/json')) {
       try {
         responseData = await response.json();
-      } catch (error) {
+      } catch {
         throw { message: 'Failed to parse response', status: response.status } as ApiError;
       }
     } else {
@@ -697,7 +697,7 @@ export const api = {
     if (contentType && contentType.includes('application/json')) {
       try {
         responseData = await response.json();
-      } catch (error) {
+      } catch {
         throw { message: 'Failed to parse response', status: response.status } as ApiError;
       }
     } else {
@@ -1231,10 +1231,22 @@ export const chatApi = {
 
     const rawMessages = Array.isArray(data.messages) ? data.messages : [];
 
-    const messages: GroupMessage[] = rawMessages.map((m: any) => ({
+    interface RawChatMessage {
+      id?: string;
+      _id?: string;
+      sender_id?: string;
+      timestamp?: string;
+      message?: string;
+      created_at?: string;
+      user_id?: string;
+      username?: string;
+      group_id?: string;
+    }
+
+    const messages: GroupMessage[] = (rawMessages as RawChatMessage[]).map((m) => ({
       id: m.id || m._id || `${m.sender_id || ""}-${m.timestamp || ""}`,
-      message: m.message,
-      created_at: m.created_at || m.timestamp,
+      message: m.message ?? "",
+      created_at: m.created_at || m.timestamp || "",
       user_id: m.user_id || m.sender_id || "",
       username: m.username || "Unknown",
       group_id: m.group_id,

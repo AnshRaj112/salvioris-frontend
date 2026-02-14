@@ -696,7 +696,7 @@ export default function CommunityPage() {
                     {activeGroup?.is_creator && currentUserID && m.user_id !== currentUserID && (
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="default"
                         className={styles.memberRemoveBtn}
                         onClick={() => handleRemoveMember(m.user_id)}
                         disabled={removingUserId === m.user_id}
