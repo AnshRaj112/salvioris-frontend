@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -15,7 +15,6 @@ import styles from "./Signin.module.scss";
 
 export default function SigninClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -56,9 +55,7 @@ export default function SigninClient() {
         if (response.session_token || response.token) {
           localStorage.setItem("session_token", response.session_token || response.token || "");
         }
-        // Redirect to desired page or home
-        const redirect = searchParams.get("redirect") || "/home";
-        router.push(redirect);
+        router.push("/home");
       }
     } catch (err) {
       const apiError = err as ApiError;
@@ -232,16 +229,7 @@ export default function SigninClient() {
 
                   <p className={styles.signupLink}>
                     Don&apos;t have an account?{" "}
-                    <Link
-                      href={
-                        searchParams.get("redirect")
-                          ? `/signup?redirect=${encodeURIComponent(
-                              searchParams.get("redirect") as string
-                            )}`
-                          : "/signup"
-                      }
-                      className={styles.link}
-                    >
+                    <Link href="/signup" className={styles.link}>
                       Create Account
                     </Link>
                   </p>

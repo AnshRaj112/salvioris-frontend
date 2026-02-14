@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -25,7 +25,6 @@ import styles from "./Signup.module.scss";
 
 export default function SignupClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -155,9 +154,7 @@ export default function SignupClient() {
         if (response.session_token || response.token) {
           localStorage.setItem("session_token", response.session_token || response.token || "");
         }
-        // Redirect to desired page or home
-        const redirect = searchParams.get("redirect") || "/home";
-        router.push(redirect);
+        router.push("/home");
       }
     } catch (err) {
       const apiError = err as ApiError;
@@ -498,16 +495,7 @@ export default function SignupClient() {
 
                   <p className={styles.loginLink}>
                     Already have an account?{" "}
-                    <Link
-                      href={
-                        searchParams.get("redirect")
-                          ? `/signin?redirect=${encodeURIComponent(
-                              searchParams.get("redirect") as string
-                            )}`
-                          : "/signin"
-                      }
-                      className={styles.link}
-                    >
+                    <Link href="/signin" className={styles.link}>
                       Sign In
                     </Link>
                   </p>
