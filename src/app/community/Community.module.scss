@@ -1,6 +1,7 @@
 .communityPage {
-  height: 100vh;
-  background: var(--bg-hero);
+  height: 100%;
+  min-height: 0;
+  background: transparent;
   width: 100%;
   padding: 1.5rem 0;
   display: flex;
