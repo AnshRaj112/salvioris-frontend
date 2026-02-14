@@ -5,36 +5,40 @@ import salviorisLogo from "../../../assets/salvioris.jpg";
 export function Footer() {
   const footerLinks = {
     "Mental Health": [
-      { label: "Find a Therapist", href: "/search" },
-      { label: "Mental Health Resources", href: "/resources" },
-      { label: "Crisis Support", href: "/crisis" },
-      { label: "How It Works", href: "/how-it-works" },
+      // { label: "Find a Therapist", href: "/search" },
+      // { label: "Mental Health Resources", href: "/resources" },
+      // { label: "Crisis Support", href: "/crisis" },
+      // { label: "How It Works", href: "/how-it-works" },
+      { label: "Vent your heart out", href: "/vent" },
+      { label: "Journaling", href: "/journal" },
+      { label: "Community Forum", href: "/community" },
+      // { label: "How It Works", href: "/how-it-works" },
     ],
     "For Therapists": [
       { label: "Join Our Network", href: "/therapist-signup" },
-      { label: "Therapist Dashboard", href: "/therapist-dashboard" },
-      { label: "Resources", href: "/therapist-resources" },
-      { label: "Pricing", href: "/therapist-pricing" },
+      // { label: "Therapist Dashboard", href: "/therapist-dashboard" },
+      // { label: "Resources", href: "/therapist-resources" },
+      // { label: "Pricing", href: "/therapist-pricing" },
     ],
     "Support": [
       { label: "Help Center", href: "/help" },
       { label: "Contact Us", href: "/contact" },
       { label: "Feedback", href: "/feedback" },
       { label: "FAQ", href: "/faq" },
-      { label: "Safety Guidelines", href: "/safety" },
+      // { label: "Safety Guidelines", href: "/safety" },
     ],
     "Legal": [
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms of Service", href: "/terms" },
-      { label: "Refund Policy", href: "/refund" },
-      { label: "Accessibility", href: "/accessibility" },
+      // { label: "Refund Policy", href: "/refund" },
+      // { label: "Accessibility", href: "/accessibility" },
     ],
   };
 
   const socialLinks = [
-    { icon: Twitter, href: "#", label: "Twitter" },
-    { icon: Instagram, href: "#", label: "Instagram" },
-    { icon: Linkedin, href: "#", label: "LinkedIn" },
+    { icon: Twitter, href: "https://x.com/salvioris", label: "Twitter" },
+    { icon: Instagram, href: "https://www.instagram.com/salvioris_hq/", label: "Instagram" },
+    // { icon: Linkedin, href: "#", label: "LinkedIn" },
   ];
 
   return (
@@ -137,7 +141,9 @@ export function Footer() {
             <div className="text-sm text-muted-foreground mb-4 md:mb-0">
               <p>© {new Date().getFullYear()} SALVIORIS. All rights reserved.</p>
               <p className="mt-1">
-                Licensed mental health professionals. HIPAA compliant platform.
+                {/* Licensed mental health professionals.  */}
+                {/* HIPAA compliant platform. */}
+                An official EXSOLVIA product.
               </p>
             </div>
 

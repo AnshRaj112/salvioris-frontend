@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, LogOut, Trash2, MessageCircle } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, LogOut, Trash2, MessageCircle, BarChart3, TrendingUp, Repeat, LayoutGrid } from "lucide-react";
 import styles from "./Admin.module.scss";
 import { ModalDialog } from "../components/ui/ModalDialog";
 
@@ -53,6 +53,13 @@ interface Contact {
   ip_address?: string;
 }
 
+interface AdminUser {
+  id: string;
+  username: string;
+  created_at: string;
+  is_active: boolean;
+}
+
 interface WaitlistEntry {
   id: string;
   name: string;
@@ -88,6 +95,7 @@ export default function AdminDashboard() {
   const [blockedIPs, setBlockedIPs] = useState<BlockedIP[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [userWaitlist, setUserWaitlist] = useState<WaitlistEntry[]>([]);
   const [therapistWaitlist, setTherapistWaitlist] = useState<WaitlistEntry[]>([]);
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
@@ -95,18 +103,35 @@ export default function AdminDashboard() {
   const [isLoadingIPs, setIsLoadingIPs] = useState(false);
   const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
   const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isLoadingUserWaitlist, setIsLoadingUserWaitlist] = useState(false);
   const [isLoadingTherapistWaitlist, setIsLoadingTherapistWaitlist] = useState(false);
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist" | "groups">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "users" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist" | "groups" | "insights">("pending");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [deletingWaitlistId, setDeletingWaitlistId] = useState<string | null>(null);
+  const [deletingFeedbackId, setDeletingFeedbackId] = useState<string | null>(null);
+  const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [adminGroups, setAdminGroups] = useState<AdminGroup[]>([]);
   const [adminGroupsLoading, setAdminGroupsLoading] = useState(false);
   const [adminGroupMembers, setAdminGroupMembers] = useState<AdminGroupMember[]>([]);
   const [adminGroupMembersLoading, setAdminGroupMembersLoading] = useState(false);
   const [membersModalGroup, setMembersModalGroup] = useState<AdminGroup | null>(null);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const [insights, setInsights] = useState<{
+    from: string;
+    to: string;
+    new_users_per_day: { date: string; count: number }[];
+    active_users_per_day: { date: string; count: number }[];
+    recurring_users_count: number;
+    top_pages: { path: string; count: number }[];
+    total_new_users: number;
+    total_active_users: number;
+  } | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsFrom, setInsightsFrom] = useState("");
+  const [insightsTo, setInsightsTo] = useState("");
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
@@ -151,14 +176,54 @@ export default function AdminDashboard() {
       fetchFeedbacks();
     } else if (activeTab === "contact") {
       fetchContacts();
+    } else if (activeTab === "users") {
+      fetchUsers();
     } else if (activeTab === "userWaitlist") {
       fetchUserWaitlist();
     } else if (activeTab === "therapistWaitlist") {
       fetchTherapistWaitlist();
     } else if (activeTab === "groups") {
       fetchAdminGroups();
+    } else if (activeTab === "insights") {
+      fetchInsights();
     }
   }, [activeTab, isAuthenticated]);
+
+  const fetchInsights = async () => {
+    setInsightsLoading(true);
+    try {
+      let from = insightsFrom;
+      let to = insightsTo;
+      if (!from || !to) {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 30);
+        from = start.toISOString().slice(0, 10);
+        to = end.toISOString().slice(0, 10);
+        setInsightsFrom(from);
+        setInsightsTo(to);
+      }
+      const data = await api.getAdminInsights(from, to);
+      if (data.success) {
+        setInsights({
+          from: data.from,
+          to: data.to,
+          new_users_per_day: data.new_users_per_day || [],
+          active_users_per_day: data.active_users_per_day || [],
+          recurring_users_count: data.recurring_users_count ?? 0,
+          top_pages: data.top_pages || [],
+          total_new_users: data.total_new_users ?? 0,
+          total_active_users: data.total_active_users ?? 0,
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching insights:", e);
+      setNotice({ title: "Error", message: "Failed to load insights." });
+      setInsights(null);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     setConfirmState({
@@ -238,6 +303,21 @@ export default function AdminDashboard() {
       setNotice({ title: "Error", message: "Failed to fetch contacts." });
     } finally {
       setIsLoadingContacts(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const data = await api.getUsers();
+      if (data.success) {
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setNotice({ title: "Error", message: "Failed to fetch users." });
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
@@ -414,6 +494,87 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleDeleteFeedback = async (id: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete feedback",
+      message: "Delete this feedback? This action cannot be undone.",
+      confirmText: "Delete",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        setDeletingFeedbackId(id);
+        try {
+          const data = await api.deleteFeedback(id);
+          if (data.success) {
+            setNotice({ title: "Deleted", message: "Feedback deleted." });
+            fetchFeedbacks();
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to delete feedback." });
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to delete feedback";
+          setNotice({ title: "Error", message: errorMessage });
+        } finally {
+          setDeletingFeedbackId(null);
+        }
+      },
+    });
+  };
+
+  const handleDeleteContact = async (id: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete contact",
+      message: "Delete this contact submission? This action cannot be undone.",
+      confirmText: "Delete",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        setDeletingContactId(id);
+        try {
+          const data = await api.deleteContact(id);
+          if (data.success) {
+            setNotice({ title: "Deleted", message: "Contact deleted." });
+            fetchContacts();
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to delete contact." });
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to delete contact";
+          setNotice({ title: "Error", message: errorMessage });
+        } finally {
+          setDeletingContactId(null);
+        }
+      },
+    });
+  };
+
+  const handleDeleteUser = async (id: string, username: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete user",
+      message: `Delete user "${username}"? This will remove the account and related data. This action cannot be undone.`,
+      confirmText: "Delete",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        setDeletingUserId(id);
+        try {
+          const data = await api.deleteUser(id);
+          if (data.success) {
+            setNotice({ title: "Deleted", message: "User deleted." });
+            fetchUsers();
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to delete user." });
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to delete user";
+          setNotice({ title: "Error", message: errorMessage });
+        } finally {
+          setDeletingUserId(null);
+        }
+      },
+    });
+  };
+
   const handleDeleteUserWaitlistEntry = async (id: string) => {
     setConfirmState({
       open: true,
@@ -524,6 +685,13 @@ export default function AdminDashboard() {
             Blocked IPs ({blockedIPs.length})
           </button>
           <button
+            className={`${styles.tab} ${activeTab === "users" ? styles.active : ""}`}
+            onClick={() => setActiveTab("users")}
+          >
+            <Users className={styles.tabIcon} />
+            Users ({users.length})
+          </button>
+          <button
             className={`${styles.tab} ${activeTab === "feedback" ? styles.active : ""}`}
             onClick={() => setActiveTab("feedback")}
           >
@@ -558,9 +726,64 @@ export default function AdminDashboard() {
             <MessageCircle className={styles.tabIcon} />
             Community Groups ({adminGroups.length})
           </button>
+          <button
+            className={`${styles.tab} ${activeTab === "insights" ? styles.active : ""}`}
+            onClick={() => setActiveTab("insights")}
+          >
+            <BarChart3 className={styles.tabIcon} />
+            Insights
+          </button>
         </div>
 
-        {activeTab === "feedback" ? (
+        {activeTab === "users" ? (
+          isLoadingUsers ? (
+            <div className={styles.loading}>Loading users...</div>
+          ) : users.length === 0 ? (
+            <div className={styles.emptyState}>
+              <Users className={styles.emptyIcon} />
+              <p>No users found.</p>
+            </div>
+          ) : (
+            <div className={styles.feedbacksGrid}>
+              {users.map((user) => (
+                <Card key={user.id} className={styles.feedbackCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.cardTitle}>
+                      <User className={styles.icon} />
+                      {user.username}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={styles.info}>
+                      <div className={styles.infoItem}>
+                        <span className={styles.label}>ID:</span>
+                        <span>{user.id}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.label}>Joined:</span>
+                        <span>{formatDateTime(user.created_at)}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.label}>Active:</span>
+                        <span>{user.is_active ? "Yes" : "No"}</span>
+                      </div>
+                    </div>
+                    <div className={styles.actions}>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteUser(user.id, user.username)}
+                        disabled={deletingUserId === user.id}
+                      >
+                        <Trash2 className={styles.buttonIcon} />
+                        {deletingUserId === user.id ? "Deleting..." : "Delete"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        ) : activeTab === "feedback" ? (
           isLoadingFeedbacks ? (
             <div className={styles.loading}>Loading feedbacks...</div>
           ) : feedbacks.length === 0 ? (
@@ -593,6 +816,16 @@ export default function AdminDashboard() {
                           <span>{feedback.ip_address}</span>
                         </div>
                       )}
+                    </div>
+                    <div className={styles.actions}>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteFeedback(feedback.id)}
+                        disabled={deletingFeedbackId === feedback.id}
+                      >
+                        <Trash2 className={styles.buttonIcon} />
+                        {deletingFeedbackId === feedback.id ? "Deleting..." : "Delete"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -641,6 +874,16 @@ export default function AdminDashboard() {
                           <span>{contact.ip_address}</span>
                         </div>
                       )}
+                    </div>
+                    <div className={styles.actions}>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteContact(contact.id)}
+                        disabled={deletingContactId === contact.id}
+                      >
+                        <Trash2 className={styles.buttonIcon} />
+                        {deletingContactId === contact.id ? "Deleting..." : "Delete"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -820,6 +1063,159 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )
+        ) : activeTab === "insights" ? (
+          insightsLoading ? (
+            <div className={styles.loading}>Loading insights...</div>
+          ) : !insights && !insightsFrom && !insightsTo ? (
+            <div className={styles.emptyState}>
+              <BarChart3 className={styles.emptyIcon} />
+              <p>Load analytics for the last 30 days or pick a date range.</p>
+              <div className={styles.insightsDateRow} style={{ marginTop: "1rem", justifyContent: "center" }}>
+                <input
+                  type="date"
+                  value={insightsFrom}
+                  onChange={(e) => setInsightsFrom(e.target.value)}
+                  className={styles.insightsDateInput}
+                />
+                <input
+                  type="date"
+                  value={insightsTo}
+                  onChange={(e) => setInsightsTo(e.target.value)}
+                  className={styles.insightsDateInput}
+                />
+                <Button onClick={fetchInsights}>Load insights</Button>
+              </div>
+            </div>
+          ) : !insights ? (
+            <div className={styles.emptyState}>
+              <BarChart3 className={styles.emptyIcon} />
+              <p>Click &quot;Load insights&quot; to fetch analytics.</p>
+              <div className={styles.insightsDateRow} style={{ marginTop: "1rem", justifyContent: "center" }}>
+                <input
+                  type="date"
+                  value={insightsFrom}
+                  onChange={(e) => setInsightsFrom(e.target.value)}
+                  className={styles.insightsDateInput}
+                />
+                <input
+                  type="date"
+                  value={insightsTo}
+                  onChange={(e) => setInsightsTo(e.target.value)}
+                  className={styles.insightsDateInput}
+                />
+                <Button onClick={fetchInsights}>Load insights</Button>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.insightsPanel}>
+              <div className={styles.insightsDateRow}>
+                <span>From {insights.from} to {insights.to}</span>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <input
+                    type="date"
+                    value={insightsFrom}
+                    onChange={(e) => setInsightsFrom(e.target.value)}
+                    className={styles.insightsDateInput}
+                  />
+                  <input
+                    type="date"
+                    value={insightsTo}
+                    onChange={(e) => setInsightsTo(e.target.value)}
+                    className={styles.insightsDateInput}
+                  />
+                  <Button size="sm" onClick={fetchInsights}>Refresh</Button>
+                </div>
+              </div>
+              <div className={styles.insightsCards}>
+                <Card className={styles.insightCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.insightCardTitle}>
+                      <TrendingUp className={styles.insightIcon} />
+                      New signups (period)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <span className={styles.insightValue}>{insights.total_new_users}</span>
+                  </CardContent>
+                </Card>
+                <Card className={styles.insightCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.insightCardTitle}>
+                      <User className={styles.insightIcon} />
+                      Active users (period)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <span className={styles.insightValue}>{insights.total_active_users}</span>
+                  </CardContent>
+                </Card>
+                <Card className={styles.insightCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.insightCardTitle}>
+                      <Repeat className={styles.insightIcon} />
+                      Recurring users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <span className={styles.insightValue}>{insights.recurring_users_count}</span>
+                    <p className={styles.insightHint}>Users active on 2+ days in range</p>
+                  </CardContent>
+                </Card>
+              </div>
+              <Card className={styles.insightsChartCard}>
+                <CardHeader>
+                  <CardTitle className={styles.insightCardTitle}>
+                    <BarChart3 className={styles.insightIcon} />
+                    New users per day
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {insights.new_users_per_day.length === 0 ? (
+                    <p className={styles.insightHint}>No data in this range.</p>
+                  ) : (
+                    <div className={styles.barChart}>
+                      {insights.new_users_per_day.map((d) => (
+                        <div key={d.date} className={styles.barGroup}>
+                          <div
+                            className={styles.bar}
+                            style={{
+                              height: `${Math.max(4, (d.count / Math.max(1, Math.max(...insights.new_users_per_day.map((x) => x.count)))) * 120)}px`,
+                            }}
+                            title={`${d.date}: ${d.count}`}
+                          />
+                          <span className={styles.barLabel}>{d.date.slice(5)}</span>
+                          <span className={styles.barCount}>{d.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              <Card className={styles.insightsChartCard}>
+                <CardHeader>
+                  <CardTitle className={styles.insightCardTitle}>
+                    <LayoutGrid className={styles.insightIcon} />
+                    Most used pages
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {insights.top_pages.length === 0 ? (
+                    <p className={styles.insightHint}>No page views in this range. Activity is recorded when logged-in users browse the app.</p>
+                  ) : (
+                    <div className={styles.topPagesList}>
+                      {insights.top_pages.map((p, i) => (
+                        <div key={p.path} className={styles.topPageRow}>
+                          <span className={styles.topPageRank}>{i + 1}</span>
+                          <span className={styles.topPagePath}>{p.path}</span>
+                          <span className={styles.topPageCount}>{p.count} views</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )
         ) : activeTab === "blocked" ? (

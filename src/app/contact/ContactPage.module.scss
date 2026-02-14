@@ -1,0 +1,350 @@
+// Contact page — User: dark theme (image); Therapist: therapist-signin colors
+
+.page {
+  min-height: 100vh;
+  background: #1a202c;
+  padding: 2rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  @media (min-width: 640px) {
+    padding: 3rem 1.5rem 4rem;
+  }
+}
+
+.pageTherapist {
+  background: linear-gradient(
+    135deg,
+    #c199d6 15%,
+    #c49cd8 25%,
+    #caa3dc 45%,
+    #caa3dc 65%,
+    #d4aee3 85%,
+    #d4aee3 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.toggleWrap {
+  margin-bottom: 1.25rem;
+}
+
+.toggleTrack {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 9999px;
+  padding: 4px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.pageTherapist .toggleTrack {
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 2px rgba(107, 76, 147, 0.2);
+}
+
+.toggleOption {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+}
+
+.toggleOption:hover {
+  color: #fff;
+}
+
+.toggleActive.toggleUser {
+  background: #5b8a8a;
+  color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggleActive.toggleTherapist {
+  background: #fff;
+  color: #6b4c93;
+  box-shadow: 0 1px 4px rgba(107, 76, 147, 0.3);
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: #2d3748;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.cardTherapist {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(107, 76, 147, 0.2);
+  box-shadow: 0 8px 32px rgba(107, 76, 147, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+.body {
+  padding: 1.75rem 1.5rem 1.5rem;
+}
+
+.title {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.2;
+}
+
+.titleTherapist {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #6b4c93;
+  line-height: 1.2;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.9375rem;
+}
+
+.required {
+  color: #fc8181;
+}
+
+.labelTherapist {
+  font-weight: 600;
+  color: #6b4c93;
+  font-size: 0.9375rem;
+}
+
+.requiredTherapist {
+  color: #b91c1c;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #4a5568;
+  color: #e2e8f0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #a0aec0;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #5b8a8a;
+    box-shadow: 0 0 0 2px rgba(91, 138, 138, 0.25);
+  }
+}
+
+.textarea {
+  min-height: 120px;
+  max-height: 280px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.inputTherapist,
+.textareaTherapist {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(107, 76, 147, 0.35);
+  background: #fff;
+  color: #4a3560;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: rgba(107, 76, 147, 0.5);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #6b4c93;
+    box-shadow: 0 0 0 3px rgba(107, 76, 147, 0.15);
+  }
+}
+
+.textareaTherapist {
+  min-height: 120px;
+  max-height: 280px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.hint {
+  color: #a0aec0;
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.hintTherapist {
+  color: rgba(107, 76, 147, 0.75);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.errorMessage {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #feb2b2;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.successMessage {
+  color: #68d391;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  background: rgba(104, 211, 145, 0.15);
+  border-radius: 8px;
+  margin: 0;
+}
+
+.successMessageTherapist {
+  color: #6b4c93;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  background: rgba(107, 76, 147, 0.12);
+  border-radius: 8px;
+  margin: 0;
+}
+
+.submitBtn {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: #5b8a8a;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  margin-top: 0.25rem;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #4a7575;
+  transform: translateY(-1px);
+}
+
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.submitBtnTherapist {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #6b4c93;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  margin-top: 0.25rem;
+}
+
+.submitBtnTherapist:hover:not(:disabled) {
+  background: #5a3f7a;
+  transform: translateY(-1px);
+}
+
+.submitBtnTherapist:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.backLink {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: #a0aec0;
+  text-decoration: none;
+  transition: color 0.2s, background 0.2s;
+}
+
+.backLink:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.backLinkTherapist {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: rgba(107, 76, 147, 0.8);
+  text-decoration: none;
+  transition: color 0.2s, background 0.2s;
+}
+
+.backLinkTherapist:hover {
+  color: #6b4c93;
+  background: rgba(107, 76, 147, 0.1);
+}
+
+.backIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.cardWrap {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+}

@@ -1,0 +1,426 @@
+// Feedback page — design: dark card with teal accents (#2E3A4B, #66C2B4)
+// Therapist variant: therapist-signin colors (purple gradient, #6B4C93)
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1d2935 0%, #252f3d 50%, #1d2935 100%);
+  padding: 2rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  @media (min-width: 640px) {
+    padding: 3rem 1.5rem 4rem;
+  }
+}
+
+.pageTherapist {
+  background: linear-gradient(
+    135deg,
+    #c199d6 15%,
+    #c49cd8 25%,
+    #caa3dc 45%,
+    #caa3dc 65%,
+    #d4aee3 85%,
+    #d4aee3 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.toggleWrap {
+  margin-bottom: 1.25rem;
+}
+
+.toggleTrack {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 9999px;
+  padding: 4px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.pageTherapist .toggleTrack {
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 2px rgba(107, 76, 147, 0.2);
+}
+
+.toggleOption {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+}
+
+.toggleOption:hover {
+  color: #fff;
+}
+
+.toggleActive.toggleUser {
+  background: #66c2b4;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggleActive.toggleTherapist {
+  background: #fff;
+  color: #6b4c93;
+  box-shadow: 0 1px 4px rgba(107, 76, 147, 0.3);
+}
+
+.card {
+  width: 100%;
+  max-width: 560px;
+  background: #2e3a4b;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.cardTherapist {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(107, 76, 147, 0.2);
+  box-shadow: 0 8px 32px rgba(107, 76, 147, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0;
+  gap: 1rem;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.starIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #66c2b4;
+  flex-shrink: 0;
+}
+
+.starIconTherapist {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #6b4c93;
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #66c2b4;
+  line-height: 1.2;
+
+  @media (min-width: 640px) {
+    font-size: 1.5rem;
+  }
+}
+
+.titleTherapist {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #6b4c93;
+  line-height: 1.2;
+
+  @media (min-width: 640px) {
+    font-size: 1.5rem;
+  }
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: #aaaaaa;
+  text-decoration: none;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.backLink:hover {
+  color: #d0d0d0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.backLinkTherapist {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: rgba(107, 76, 147, 0.8);
+  text-decoration: none;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.backLinkTherapist:hover {
+  color: #6b4c93;
+  background: rgba(107, 76, 147, 0.1);
+}
+
+.backIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.intro {
+  color: #d0d0d0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  margin: 0 0 1.5rem;
+}
+
+.introTherapist {
+  color: #6b4c93;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  margin: 0 0 1.5rem;
+  opacity: 0.9;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-weight: 700;
+  color: #d0d0d0;
+  font-size: 0.9375rem;
+}
+
+.labelTherapist {
+  font-weight: 700;
+  color: #6b4c93;
+  font-size: 0.9375rem;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 140px;
+  max-height: 320px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #364251;
+  color: #d0d0d0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &::placeholder {
+    color: #888888;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #66c2b4;
+    box-shadow: 0 0 0 3px rgba(102, 194, 180, 0.15);
+  }
+}
+
+.textareaTherapist {
+  width: 100%;
+  min-height: 140px;
+  max-height: 320px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(107, 76, 147, 0.35);
+  background: #fff;
+  color: #4a3560;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &::placeholder {
+    color: rgba(107, 76, 147, 0.5);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #6b4c93;
+    box-shadow: 0 0 0 3px rgba(107, 76, 147, 0.15);
+  }
+}
+
+.helperText {
+  color: #d0d0d0;
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.helperTextTherapist {
+  color: rgba(107, 76, 147, 0.8);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.errorMessage {
+  background: rgba(185, 28, 28, 0.15);
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  color: #f87171;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.successMessage {
+  color: #66c2b4;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  background: rgba(102, 194, 180, 0.12);
+  border-radius: 6px;
+  margin: 0;
+}
+
+.submitBtn {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #66c2b4;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  margin-top: 0.25rem;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #5ab8ab;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(102, 194, 180, 0.35);
+}
+
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.submitBtnTherapist {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: #6b4c93;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  margin-top: 0.25rem;
+}
+
+.submitBtnTherapist:hover:not(:disabled) {
+  background: #5a3f7a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(107, 76, 147, 0.4);
+}
+
+.submitBtnTherapist:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.privacyNote {
+  color: #d0d0d0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  margin: 1.25rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.privacyNote strong {
+  font-weight: 700;
+}
+
+.privacyNoteTherapist {
+  color: rgba(107, 76, 147, 0.9);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  margin: 1.25rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(107, 76, 147, 0.2);
+}
+
+.privacyNoteTherapist strong {
+  font-weight: 700;
+}
+
+.successBlock {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.successIcon {
+  width: 3rem;
+  height: 3rem;
+  color: #66c2b4;
+  margin-bottom: 1rem;
+}
+
+.successTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #66c2b4;
+}
+
+.successIconTherapist {
+  width: 3rem;
+  height: 3rem;
+  color: #6b4c93;
+  margin-bottom: 1rem;
+}
+
+.successTitleTherapist {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #6b4c93;
+}

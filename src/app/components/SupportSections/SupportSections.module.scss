@@ -1,0 +1,471 @@
+// Shared support page layout: user section (signup/signin colors) + therapist section (therapist-signup colors)
+
+.wrapper {
+  width: 100%;
+}
+
+// ----- Toggle layout (single section, switch User / Therapist) -----
+.formPageWrapper {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.toggleWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.toggleTrack {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.therapistSection .toggleTrack {
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 2px rgba(107, 76, 147, 0.2);
+}
+
+.toggleOption {
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+}
+
+.toggleOption:hover {
+  color: #fff;
+}
+
+.toggleOptionActive.toggleUser {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggleOptionActive.toggleTherapist {
+  background: #fff;
+  color: #6b4c93;
+  box-shadow: 0 1px 4px rgba(107, 76, 147, 0.3);
+}
+
+.therapistSection .toggleOption:not(.toggleOptionActive) {
+  color: rgba(255, 255, 255, 0.9);
+}
+.therapistSection .toggleOption:not(.toggleOptionActive):hover {
+  color: #fff;
+}
+
+// ----- User section: signup/signin style -----
+.userSection {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1d2935 0%, #283848 100%);
+  width: 100%;
+  padding: 2.5rem 0.75rem 3rem;
+
+  @media (min-width: 640px) {
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 3.5rem 2rem 4rem;
+  }
+}
+
+.userContainer {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.userCard {
+  width: 100%;
+  background: hsl(var(--card) / 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+
+  @media (min-width: 640px) {
+    padding: 2.25rem;
+  }
+}
+
+.userBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: hsl(var(--primary));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.userTitle {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.5rem;
+
+  @media (min-width: 640px) {
+    font-size: 1.875rem;
+  }
+}
+
+.userContent {
+  font-size: 0.9375rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.7;
+}
+
+.userContent a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.userContent a:hover {
+  text-decoration: underline;
+}
+
+// Form elements in user section (match signup/signin page style)
+.userContent .formIntro {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+.userContent .formGroup {
+  margin-bottom: 1.25rem;
+}
+.userContent .formLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+.userContent .formInput,
+.userContent .formTextarea {
+  width: 100%;
+  background: hsl(var(--input));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.userContent .formInput::placeholder,
+.userContent .formTextarea::placeholder {
+  color: hsl(var(--muted-foreground) / 0.7);
+}
+.userContent .formInput:hover,
+.userContent .formTextarea:hover {
+  border-color: hsl(var(--border) / 1.2);
+}
+.userContent .formInput:focus,
+.userContent .formTextarea:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+}
+.userContent .formTextarea {
+  min-height: 120px;
+  resize: vertical;
+  max-height: 280px;
+}
+.userContent .formHint {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0.375rem;
+  line-height: 1.4;
+}
+.userContent .formError {
+  font-size: 0.8125rem;
+  color: hsl(var(--destructive));
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: hsl(var(--destructive) / 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--destructive) / 0.2);
+}
+.userContent .formSuccess {
+  font-size: 0.875rem;
+  color: hsl(var(--primary));
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: hsl(var(--primary) / 0.1);
+  border-radius: 0.5rem;
+  font-weight: 500;
+}
+.userContent .formSubmit {
+  margin-top: 1.25rem;
+  min-height: 48px;
+  width: 100%;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  background: var(--gradient-primary) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: none !important;
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.userContent .formSubmit:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.35);
+}
+.userContent .formSubmit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.userContent .formSubmit:not(:disabled) {
+  cursor: pointer;
+}
+.userContent .formFooter {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+.userContent .formFooter a {
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+.userContent .formFooter a:hover {
+  text-decoration: underline;
+}
+
+// ----- Therapist section: therapist-signup style -----
+.therapistSection {
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    #c199d6 15%,
+    #c49cd8 25%,
+    #caa3dc 45%,
+    #caa3dc 65%,
+    #d4aee3 85%,
+    #d4aee3 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+  width: 100%;
+  padding: 2.5rem 0.75rem 3rem;
+
+  @media (min-width: 640px) {
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 3.5rem 2rem 4rem;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.therapistContainer {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.therapistCard {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(107, 76, 147, 0.25);
+  box-shadow: 0 8px 32px rgba(107, 76, 147, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+
+  @media (min-width: 640px) {
+    padding: 2.25rem;
+  }
+}
+
+.therapistBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b4c93;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.therapistTitle {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #6b4c93;
+  margin-bottom: 0.5rem;
+
+  @media (min-width: 640px) {
+    font-size: 1.875rem;
+  }
+}
+
+.therapistContent {
+  font-size: 0.9375rem;
+  color: #6b4c93;
+  line-height: 1.7;
+  opacity: 0.95;
+}
+
+.therapistContent a {
+  color: #5a3f7a;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.therapistContent a:hover {
+  text-decoration: underline;
+}
+
+// Form elements in therapist section (match therapist-signup page style)
+.therapistContent .formIntro {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #6b4c93;
+  font-weight: 500;
+  opacity: 0.95;
+}
+.therapistContent .formGroup {
+  margin-bottom: 1.25rem;
+}
+.therapistContent .formLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b4c93;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+.therapistContent .formInput,
+.therapistContent .formTextarea {
+  width: 100%;
+  background: #fff;
+  border: 1px solid rgba(107, 76, 147, 0.35);
+  color: #4a3560;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.therapistContent .formInput::placeholder,
+.therapistContent .formTextarea::placeholder {
+  color: rgba(107, 76, 147, 0.5);
+}
+.therapistContent .formInput:hover,
+.therapistContent .formTextarea:hover {
+  border-color: rgba(107, 76, 147, 0.5);
+}
+.therapistContent .formInput:focus,
+.therapistContent .formTextarea:focus {
+  outline: none;
+  border-color: #6b4c93;
+  box-shadow: 0 0 0 3px rgba(107, 76, 147, 0.15);
+}
+.therapistContent .formTextarea {
+  min-height: 120px;
+  resize: vertical;
+  max-height: 280px;
+}
+.therapistContent .formHint {
+  font-size: 0.75rem;
+  color: rgba(107, 76, 147, 0.7);
+  margin-top: 0.375rem;
+  line-height: 1.4;
+}
+.therapistContent .formError {
+  font-size: 0.8125rem;
+  color: #b91c1c;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(185, 28, 28, 0.08);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+}
+.therapistContent .formSuccess {
+  font-size: 0.875rem;
+  color: #5a3f7a;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(107, 76, 147, 0.1);
+  border-radius: 0.5rem;
+  font-weight: 500;
+}
+.therapistContent .formSubmit {
+  margin-top: 1.25rem;
+  min-height: 48px;
+  width: 100%;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  background: #6b4c93 !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(107, 76, 147, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.therapistContent .formSubmit:hover:not(:disabled) {
+  background: #5a3f7a !important;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(107, 76, 147, 0.4);
+}
+.therapistContent .formSubmit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.therapistContent .formSubmit:not(:disabled) {
+  cursor: pointer;
+}
+.therapistContent .formFooter {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(107, 76, 147, 0.2);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(107, 76, 147, 0.85);
+}
+.therapistContent .formFooter a {
+  color: #5a3f7a;
+  font-weight: 600;
+}
+.therapistContent .formFooter a:hover {
+  text-decoration: underline;
+}

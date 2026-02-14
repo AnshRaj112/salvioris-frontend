@@ -384,7 +384,9 @@ export const api = {
 
   // Admin routes
   getViolations: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/violations`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/violations`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
@@ -393,7 +395,9 @@ export const api = {
   },
 
   getBlockedIPs: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/blocked-ips`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/blocked-ips`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
@@ -406,6 +410,7 @@ export const api = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...getAdminAuthHeaders(),
       },
     });
     const data = await response.json();
@@ -416,7 +421,9 @@ export const api = {
   },
 
   getPendingTherapists: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/therapists/pending`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/therapists/pending`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
@@ -425,7 +432,9 @@ export const api = {
   },
 
   getApprovedTherapists: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/therapists/approved`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/therapists/approved`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
@@ -436,6 +445,7 @@ export const api = {
   approveTherapist: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/api/admin/therapists/approve?id=${encodeURIComponent(id)}`, {
       method: 'PUT',
+      headers: { ...getAdminAuthHeaders() },
     });
     const data = await response.json();
     if (!response.ok) {
@@ -447,6 +457,7 @@ export const api = {
   rejectTherapist: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/api/admin/therapists/reject?id=${encodeURIComponent(id)}`, {
       method: 'DELETE',
+      headers: { ...getAdminAuthHeaders() },
     });
     const data = await response.json();
     if (!response.ok) {
@@ -620,10 +631,79 @@ export const api = {
   },
 
   getFeedbacks: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/feedbacks`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/feedbacks`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  deleteFeedback: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/feedbacks?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getUsers: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  deleteUser: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/users?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getAdminInsights: async (from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    const url = `${API_BASE_URL}/api/admin/insights${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await fetch(url, { headers: { ...getAdminAuthHeaders() } });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  // Record page/activity for analytics (optional: send with user session to attribute to user)
+  recordActivity: async (path: string) => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('session_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE_URL}/api/activity`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ path }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return; // non-blocking; don't throw
     }
     return data;
   },
@@ -646,7 +726,21 @@ export const api = {
   },
 
   getContacts: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/contacts`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/contacts`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  deleteContact: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/contacts?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
@@ -712,7 +806,9 @@ export const api = {
   },
 
   getUserWaitlist: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/user`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/user`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
@@ -721,7 +817,9 @@ export const api = {
   },
 
   getTherapistWaitlist: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/therapist`);
+    const response = await fetch(`${API_BASE_URL}/api/admin/waitlist/therapist`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
     const data = await response.json();
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;

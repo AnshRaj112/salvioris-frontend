@@ -117,7 +117,7 @@ export default function HomePage() {
             </p>
           </div>
           <div className={styles.headerActions}>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button variant="destructive" onClick={handleLogout}>
               Logout
             </Button>
           </div>
