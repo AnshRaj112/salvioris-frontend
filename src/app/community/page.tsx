@@ -47,11 +47,18 @@ export default function CommunityPage() {
 
   const wsRef = useRef<WebSocket | null>(null);
   const activeGroupRef = useRef<ActiveGroup | null>(null);
-  
-  // Keep ref in sync with activeGroup
+  const historyRequestLockRef = useRef(false);
+  const lastLoadedGroupIdRef = useRef<string | null>(null);
+  const historyRequestIdRef = useRef(0);
+  const oldestMessageRef = useRef<string | null>(null);
+
+  // Keep refs in sync
   useEffect(() => {
     activeGroupRef.current = activeGroup;
   }, [activeGroup]);
+  useEffect(() => {
+    oldestMessageRef.current = messages.length > 0 ? messages[0].created_at : null;
+  }, [messages]);
 
   // Establish a single WebSocket connection
   useEffect(() => {
@@ -202,15 +209,23 @@ export default function CommunityPage() {
     [activeGroup?.slug]
   );
 
+  // Load history: use functional setState for appendTop to avoid messages in deps.
+  // Ref-based lock prevents duplicate/concurrent requests. Only depends on activeGroup.
   const loadHistory = useCallback(async (appendTop: boolean) => {
-    if (!activeGroup) return;
+    const group = activeGroupRef.current;
+    if (!group) return;
+
+    // Request deduplication: prevent concurrent or rapid-repeat calls
+    if (historyRequestLockRef.current) return;
+    historyRequestLockRef.current = true;
     setLoadingHistory(true);
+    const reqId = ++historyRequestIdRef.current;
+
     try {
-      const before =
-        appendTop && messages.length > 0
-          ? messages[0].created_at
-          : undefined;
-      const res = await chatApi.loadHistory(activeGroup.id, before, 50);
+      const before = appendTop ? oldestMessageRef.current ?? undefined : undefined;
+      const res = await chatApi.loadHistory(group.id, before, 50);
+      if (reqId !== historyRequestIdRef.current) return;
+
       setHasMore(res.has_more);
       if (appendTop) {
         setMessages((prev) => [...res.messages, ...prev]);
@@ -218,17 +233,28 @@ export default function CommunityPage() {
         setMessages(res.messages);
       }
     } catch {
-      // ignore
+      // ignore - avoid re-throwing to prevent cascade
     } finally {
-      setLoadingHistory(false);
+      if (reqId === historyRequestIdRef.current) {
+        historyRequestLockRef.current = false;
+        setLoadingHistory(false);
+      }
     }
-  }, [activeGroup, messages]);
+  }, []);
 
+  // Load initial history ONLY when activeGroup.id changes. Reconnect does NOT trigger this.
   useEffect(() => {
-    if (activeGroup) {
-      loadHistory(false);
+    const groupId = activeGroup?.id ?? null;
+    if (!groupId) {
+      lastLoadedGroupIdRef.current = null;
+      setMessages([]);
+      setHasMore(false);
+      return;
     }
-  }, [activeGroup, loadHistory]);
+    if (lastLoadedGroupIdRef.current === groupId) return;
+    lastLoadedGroupIdRef.current = groupId;
+    loadHistory(false);
+  }, [activeGroup?.id, loadHistory]);
 
   const handleSelectGroup = (group: Group) => {
     setActiveGroup(group);

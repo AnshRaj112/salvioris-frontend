@@ -1319,6 +1319,7 @@ export const chatApi = {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeaders(),
       },
     });
 

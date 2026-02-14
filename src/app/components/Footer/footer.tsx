@@ -64,8 +64,7 @@ export function Footer() {
             </div>
             
             <p className="text-muted-foreground mb-6 max-w-md">
-              Connecting you with licensed mental health professionals in a safe, 
-              private, and supportive environment. Your mental health matters.
+            Salvioris – A privacy-first mental health platform offering venting, journaling, and community forum
             </p>
 
             {/* Contact Info */}
