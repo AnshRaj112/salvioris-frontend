@@ -500,7 +500,7 @@ export default function CommunityPage() {
                   <div className={styles.chatHeaderActions}>
                     {activeGroup.is_creator && (
                       <>
-                        <Button size="sm" variant="outline" onClick={handleEditGroup}>
+                        <Button size="sm" variant="default" onClick={handleEditGroup}>
                           Edit
                         </Button>
                         <Button

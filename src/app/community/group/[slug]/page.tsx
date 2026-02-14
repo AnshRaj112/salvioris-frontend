@@ -5,20 +5,30 @@ import { useRouter } from "next/navigation";
 import CommunityPage from "../../page";
 
 export default function GroupBySlugPage() {
-  // This route simply reuses the main community UI and relies on the
-  // /community page logic to handle active group selection and join state.
-  // Deep-link behavior (redirect to login if not authenticated) should be
-  // implemented via auth guard higher up in the app if required.
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // If no session, redirect to signin; otherwise allow.
-    if (typeof window === "undefined") return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const token = window.localStorage.getItem("session_token");
     if (!token) {
       router.replace("/signin");
     }
-  }, [router]);
+  }, [mounted, router]);
+
+  // Render same minimal shell on server and first client render to avoid hydration mismatch,
+  // then show full CommunityPage after mount (client-only code has run).
+  if (!mounted) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </main>
+    );
+  }
 
   return <CommunityPage />;
 }
