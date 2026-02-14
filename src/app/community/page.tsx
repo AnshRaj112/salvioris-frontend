@@ -2,10 +2,11 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./Community.module.scss";
-import { groupApi, chatApi, Group, GroupMessage, CreateGroupData } from "../lib/api";
+import { groupApi, chatApi, getMe, Group, GroupMessage, GroupMember, CreateGroupData } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
+import { ModalDialog } from "../components/ui/ModalDialog";
 
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws/chat";
@@ -19,7 +20,8 @@ export default function CommunityPage() {
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState("");
   const [activeGroup, setActiveGroup] = useState<ActiveGroup | null>(null);
-  const [members, setMembers] = useState<string[]>([]);
+  const [memberList, setMemberList] = useState<GroupMember[]>([]);
+  const [currentUserID, setCurrentUserID] = useState<string | null>(null);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -33,6 +35,15 @@ export default function CommunityPage() {
     tags: [],
   });
   const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ name: "", description: "", tags: [] as string[] });
+  const [editError, setEditError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [wsConnected, setWsConnected] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const activeGroupRef = useRef<ActiveGroup | null>(null);
@@ -58,6 +69,7 @@ export default function CommunityPage() {
 
     ws.onopen = () => {
       console.log("WebSocket connected");
+      setWsConnected(true);
       // Subscribe will be handled by the separate useEffect when activeGroup changes
     };
 
@@ -92,12 +104,18 @@ export default function CommunityPage() {
       }
     };
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+    ws.onerror = (event) => {
+      console.warn("WebSocket connection error", {
+        type: event.type,
+        readyState: ws.readyState,
+        url,
+      });
+      setWsConnected(false);
     };
 
     ws.onclose = () => {
       console.log("WebSocket closed");
+      setWsConnected(false);
       wsRef.current = null;
     };
 
@@ -130,6 +148,11 @@ export default function CommunityPage() {
     fetchGroups();
   }, [search, tag]);
 
+  // Load current user once
+  useEffect(() => {
+    getMe().then((me) => setCurrentUserID(me?.user_id ?? null));
+  }, []);
+
   // Load members when active group changes
   useEffect(() => {
     if (!activeGroup) return;
@@ -137,15 +160,14 @@ export default function CommunityPage() {
     const loadMembers = async () => {
       try {
         const res = await groupApi.getGroupMembers(activeGroup.id);
-        setMembers(res.members.map((m) => m.username));
-        // If user is in member list, treat as member. Creator is automatically member.
+        setMemberList(res.members);
         const sessionToken =
           typeof window !== "undefined"
             ? window.localStorage.getItem("session_token")
             : null;
         setIsMember(!!sessionToken && res.members.length > 0);
       } catch {
-        setMembers([]);
+        setMemberList([]);
       }
     };
     loadMembers();
@@ -252,18 +274,101 @@ export default function CommunityPage() {
     try {
       await groupApi.joinGroup(activeGroup.id);
       setIsMember(true);
-      // refresh members
       const res = await groupApi.getGroupMembers(activeGroup.id);
-      setMembers(res.members.map((m) => m.username));
+      setMemberList(res.members);
     } catch {
       // ignore for now
+    }
+  };
+
+  const handleEditGroup = () => {
+    if (!activeGroup) return;
+    setEditForm({
+      name: activeGroup.name,
+      description: activeGroup.description ?? "",
+      tags: activeGroup.tags ?? [],
+    });
+    setEditError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!activeGroup || !editForm.name.trim()) {
+      setEditError("Group name is required.");
+      return;
+    }
+    setEditError(null);
+    setUpdating(true);
+    try {
+      await groupApi.updateGroup({
+        id: activeGroup.id,
+        name: editForm.name.trim(),
+        description: editForm.description?.trim() || "",
+        tags: editForm.tags?.length ? editForm.tags : [],
+      });
+      setActiveGroup((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: editForm.name.trim(),
+              description: editForm.description?.trim() || "",
+              tags: editForm.tags,
+            }
+          : null
+      );
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === activeGroup.id
+            ? {
+                ...g,
+                name: editForm.name.trim(),
+                description: editForm.description?.trim() || "",
+                tags: editForm.tags,
+              }
+            : g
+        )
+      );
+      setIsEditModalOpen(false);
+    } catch (e: unknown) {
+      setEditError(e instanceof Error ? e.message : "Failed to update group.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!activeGroup || !window.confirm("Delete this group? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      await groupApi.deleteGroup(activeGroup.id);
+      setActiveGroup(null);
+      const res = await groupApi.getGroups(50, 0, "", "");
+      setGroups(res.groups);
+    } catch {
+      // ignore
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!activeGroup) return;
+    setRemovingUserId(userId);
+    try {
+      await groupApi.removeMember(activeGroup.id, userId);
+      const res = await groupApi.getGroupMembers(activeGroup.id);
+      setMemberList(res.members);
+    } catch {
+      // ignore
+    } finally {
+      setRemovingUserId(null);
     }
   };
 
   const handleSend = async () => {
     const ws = wsRef.current;
     if (!activeGroup || !ws || ws.readyState !== WebSocket.OPEN || !messageText.trim()) {
-      console.error("Cannot send: WebSocket not ready or no active group");
+      console.warn("Cannot send: WebSocket not ready or no active group");
       return;
     }
     setSending(true);
@@ -311,9 +416,18 @@ export default function CommunityPage() {
                   onChange={(e) => setTag(e.target.value)}
                 />
               </div>
-              <p className={styles.createHint}>
-                Can&apos;t find your space? Create a new group below.
-              </p>
+              <div className={styles.createRow}>
+                <p className={styles.createHint}>
+                  Can&apos;t find your space?
+                </p>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  Create group
+                </Button>
+              </div>
             </div>
 
             <div className={styles.groupsList}>
@@ -348,59 +462,6 @@ export default function CommunityPage() {
                 </div>
               )}
             </div>
-
-            <div className={styles.createForm}>
-              <div className={styles.formRow}>
-                <label className={styles.label}>Group name</label>
-                <Input
-                  placeholder="e.g. Night Owls Support"
-                  value={createData.name}
-                  onChange={(e) =>
-                    setCreateData((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                />
-              </div>
-              <div className={styles.formRow}>
-                <label className={styles.label}>Description (optional)</label>
-                <Input
-                  placeholder="Short description that feels safe and welcoming"
-                  value={createData.description}
-                  onChange={(e) =>
-                    setCreateData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className={styles.formRow}>
-                <label className={styles.label}>
-                  Tags (comma separated, optional)
-                </label>
-                <Input
-                  placeholder="anxiety, burnout, students"
-                  value={createData.tags?.join(", ") || ""}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    const tags = raw
-                      .split(",")
-                      .map((t) => t.trim())
-                      .filter(Boolean);
-                    setCreateData((prev) => ({ ...prev, tags }));
-                  }}
-                />
-              </div>
-              {createError && (
-                <p className={styles.errorText}>{createError}</p>
-              )}
-              <Button
-                size="sm"
-                onClick={handleCreateGroup}
-                disabled={creating || !createData.name.trim()}
-              >
-                {creating ? "Creating..." : "Create group"}
-              </Button>
-            </div>
           </div>
 
           <div className={styles.chatPanel}>
@@ -410,7 +471,13 @@ export default function CommunityPage() {
                   <div>
                     <div className={styles.chatTitle}>{activeGroup.name}</div>
                     <div className={styles.chatMeta}>
-                      {members.length} members
+                      <button
+                        type="button"
+                        className={styles.membersLink}
+                        onClick={() => setIsMembersModalOpen(true)}
+                      >
+                        {memberList.length} members
+                      </button>
                       {activeSlug && (
                         <>
                           {" • "}
@@ -430,11 +497,28 @@ export default function CommunityPage() {
                       )}
                     </div>
                   </div>
-                  {!isMember && (
-                    <Button size="sm" onClick={handleJoin}>
-                      Join
-                    </Button>
-                  )}
+                  <div className={styles.chatHeaderActions}>
+                    {activeGroup.is_creator && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={handleEditGroup}>
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={handleDeleteGroup}
+                          disabled={deleting}
+                        >
+                          {deleting ? "Deleting..." : "Delete"}
+                        </Button>
+                      </>
+                    )}
+                    {!isMember && !activeGroup.is_creator && (
+                      <Button size="sm" onClick={handleJoin}>
+                        Join
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {messages.length === 0 && !loadingHistory ? (
@@ -490,13 +574,20 @@ export default function CommunityPage() {
                         value={messageText}
                         onChange={(e) => setMessageText(e.target.value)}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <Button
-                          onClick={handleSend}
-                          disabled={sending || !messageText.trim()}
-                        >
-                          Send
-                        </Button>
+                      <div style={{ display: "flex", justifyContent: "flex-end", flexDirection: "column", gap: "0.5rem" }}>
+                        {!wsConnected && (
+                          <p className={styles.wsWarning}>
+                            Connecting to chat... Please wait.
+                          </p>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                          <Button
+                            onClick={handleSend}
+                            disabled={sending || !messageText.trim() || !wsConnected || !activeGroup}
+                          >
+                            Send
+                          </Button>
+                        </div>
                       </div>
                     </>
                   ) : (
@@ -514,6 +605,159 @@ export default function CommunityPage() {
             )}
           </div>
         </section>
+
+        <ModalDialog
+          open={isCreateModalOpen}
+          title="Create a new group"
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setCreateError(null);
+          }}
+          actions={
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setCreateError(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateGroup}
+                disabled={creating || !createData.name.trim()}
+              >
+                {creating ? "Creating..." : "Create group"}
+              </Button>
+            </>
+          }
+        >
+          <div className={styles.createForm}>
+            <div className={styles.formRow}>
+              <label className={styles.label}>Group name</label>
+              <Input
+                placeholder="e.g. Night Owls Support"
+                value={createData.name}
+                onChange={(e) =>
+                  setCreateData((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.label}>Description (optional)</label>
+              <Input
+                placeholder="Short description that feels safe and welcoming"
+                value={createData.description}
+                onChange={(e) =>
+                  setCreateData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.label}>
+                Tags (comma separated, optional)
+              </label>
+              <Input
+                placeholder="anxiety, burnout, students"
+                value={createData.tags?.join(", ") || ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const tags = raw
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean);
+                  setCreateData((prev) => ({ ...prev, tags }));
+                }}
+              />
+            </div>
+            {createError && (
+              <p className={styles.errorText}>{createError}</p>
+            )}
+          </div>
+        </ModalDialog>
+
+        <ModalDialog
+          open={isMembersModalOpen}
+          title={activeGroup ? `Members — ${activeGroup.name}` : "Members"}
+          onClose={() => setIsMembersModalOpen(false)}
+        >
+          <div className={styles.membersList}>
+            {memberList.length === 0 ? (
+              <p className={styles.membersEmpty}>No members yet.</p>
+            ) : (
+              <ul className={styles.membersListUl}>
+                {memberList.map((m) => (
+                  <li key={m.user_id} className={styles.membersListItem}>
+                    <span>{m.username}</span>
+                    {activeGroup?.is_creator && currentUserID && m.user_id !== currentUserID && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={styles.memberRemoveBtn}
+                        onClick={() => handleRemoveMember(m.user_id)}
+                        disabled={removingUserId === m.user_id}
+                      >
+                        {removingUserId === m.user_id ? "Removing..." : "Remove"}
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </ModalDialog>
+
+        <ModalDialog
+          open={isEditModalOpen}
+          title="Edit group"
+          onClose={() => { setIsEditModalOpen(false); setEditError(null); }}
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => { setIsEditModalOpen(false); setEditError(null); }}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={updating || !editForm.name.trim()}>
+                {updating ? "Saving..." : "Save"}
+              </Button>
+            </>
+          }
+        >
+          <div className={styles.createForm}>
+            <div className={styles.formRow}>
+              <label className={styles.label}>Group name</label>
+              <Input
+                placeholder="e.g. Night Owls Support"
+                value={editForm.name}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.label}>Description (optional)</label>
+              <Input
+                placeholder="Short description"
+                value={editForm.description}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.label}>Tags (comma separated)</label>
+              <Input
+                placeholder="anxiety, burnout, students"
+                value={editForm.tags?.join(", ") || ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const tags = raw.split(",").map((t) => t.trim()).filter(Boolean);
+                  setEditForm((prev) => ({ ...prev, tags }));
+                }}
+              />
+            </div>
+            {editError && <p className={styles.errorText}>{editError}</p>}
+          </div>
+        </ModalDialog>
       </div>
     </main>
   );

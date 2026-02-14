@@ -455,6 +455,53 @@ export const api = {
     return data;
   },
 
+  getAdminGroups: async (limit?: number, skip?: number, search?: string, tag?: string) => {
+    const params = new URLSearchParams();
+    if (limit != null) params.append("limit", String(limit));
+    if (skip != null) params.append("skip", String(skip));
+    if (search) params.append("q", search);
+    if (tag) params.append("tag", tag);
+    const url = `${API_BASE_URL}/api/admin/groups${params.toString() ? `?${params.toString()}` : ""}`;
+    const headers: Record<string, string> = { "Content-Type": "application/json", ...getAdminAuthHeaders() };
+    const response = await fetch(url, { method: "GET", headers });
+    const text = await response.text();
+    let data: { success?: boolean; message?: string; groups?: unknown[]; total?: number };
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { message: response.statusText || `HTTP ${response.status}` };
+    }
+    if (!response.ok) {
+      const message = data?.message || `HTTP ${response.status}`;
+      throw { message, status: response.status } as ApiError;
+    }
+    return {
+      success: data?.success !== false,
+      groups: Array.isArray(data?.groups) ? data.groups : [],
+      total: typeof data?.total === "number" ? data.total : 0,
+    } as { success: boolean; groups: Array<{ id: string; name: string; slug?: string; description?: string; created_at: string; member_count: number; created_by: string; tags?: string[] }>; total: number };
+  },
+
+  getAdminGroupMembers: async (groupId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/groups/members?group_id=${encodeURIComponent(groupId)}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) throw { message: data.message || `HTTP ${response.status}`, status: response.status } as ApiError;
+    return data as { success: boolean; members: Array<{ user_id: string; username: string; joined_at: string }>; total: number };
+  },
+
+  deleteAdminGroup: async (groupId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/groups?group_id=${encodeURIComponent(groupId)}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) throw { message: data.message || `HTTP ${response.status}`, status: response.status } as ApiError;
+    return data as { success: boolean; message: string };
+  },
+
   // Vent routes
   createVent: async (data: CreateVentData) => {
     const response = await fetch(`${API_BASE_URL}/api/vent`, {
@@ -741,6 +788,7 @@ export interface Group {
   member_count: number;
   is_public: boolean;
   tags?: string[];
+  is_creator?: boolean;
 }
 
 export interface CreateGroupData {
@@ -816,6 +864,20 @@ function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem("session_token");
   if (!token) return {};
   return { Authorization: `Bearer ${token}` };
+}
+
+export async function getMe(): Promise<{ user_id: string; username: string } | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) return null;
+    return { user_id: data.user_id, username: data.username };
+  } catch {
+    return null;
+  }
 }
 
 // Group community forum API functions (removed)
@@ -1041,6 +1103,7 @@ export const groupApi = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
     });
 
@@ -1123,6 +1186,22 @@ export const groupApi = {
     }
     return responseData as { success: boolean; message: string };
   },
+
+  removeMember: async (groupId: string, userId: string): Promise<{ success: boolean; message: string }> => {
+    const params = new URLSearchParams({ group_id: groupId, user_id: userId });
+    const response = await fetch(`${API_BASE_URL}/api/groups/member?${params.toString()}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data as { success: boolean; message: string };
+  },
 };
 
 export interface ChatHistoryResponse {
@@ -1150,9 +1229,20 @@ export const chatApi = {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
 
+    const rawMessages = Array.isArray(data.messages) ? data.messages : [];
+
+    const messages: GroupMessage[] = rawMessages.map((m: any) => ({
+      id: m.id || m._id || `${m.sender_id || ""}-${m.timestamp || ""}`,
+      message: m.message,
+      created_at: m.created_at || m.timestamp,
+      user_id: m.user_id || m.sender_id || "",
+      username: m.username || "Unknown",
+      group_id: m.group_id,
+    }));
+
     return {
       success: data.success,
-      messages: data.messages || [],
+      messages,
       has_more: data.has_more || false,
     };
   },

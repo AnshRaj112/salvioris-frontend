@@ -541,3 +541,27 @@
   word-wrap: break-word;
 }
 
+.membersList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.memberItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.muted {
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+

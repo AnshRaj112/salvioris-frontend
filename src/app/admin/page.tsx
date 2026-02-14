@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, LogOut, Trash2 } from "lucide-react";
+import { Shield, CheckCircle, XCircle, Eye, Download, User, Mail, Phone, GraduationCap, Award, FileText, Ban, Unlock, AlertTriangle, MessageSquare, Contact, Users, UserCheck, LogOut, Trash2, MessageCircle } from "lucide-react";
 import styles from "./Admin.module.scss";
 import { ModalDialog } from "../components/ui/ModalDialog";
 
@@ -62,6 +62,23 @@ interface WaitlistEntry {
   ip_address?: string;
 }
 
+interface AdminGroup {
+  id: string;
+  name: string;
+  slug?: string;
+  description?: string;
+  created_at: string;
+  member_count: number;
+  created_by: string;
+  tags?: string[];
+}
+
+interface AdminGroupMember {
+  user_id: string;
+  username: string;
+  joined_at: string;
+}
+
 import { api } from "../lib/api";
 import { formatDateTime } from "../lib/time";
 
@@ -80,10 +97,16 @@ export default function AdminDashboard() {
   const [isLoadingContacts, setIsLoadingContacts] = useState(false);
   const [isLoadingUserWaitlist, setIsLoadingUserWaitlist] = useState(false);
   const [isLoadingTherapistWaitlist, setIsLoadingTherapistWaitlist] = useState(false);
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist" | "groups">("pending");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [deletingWaitlistId, setDeletingWaitlistId] = useState<string | null>(null);
+  const [adminGroups, setAdminGroups] = useState<AdminGroup[]>([]);
+  const [adminGroupsLoading, setAdminGroupsLoading] = useState(false);
+  const [adminGroupMembers, setAdminGroupMembers] = useState<AdminGroupMember[]>([]);
+  const [adminGroupMembersLoading, setAdminGroupMembersLoading] = useState(false);
+  const [membersModalGroup, setMembersModalGroup] = useState<AdminGroup | null>(null);
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
@@ -132,6 +155,8 @@ export default function AdminDashboard() {
       fetchUserWaitlist();
     } else if (activeTab === "therapistWaitlist") {
       fetchTherapistWaitlist();
+    } else if (activeTab === "groups") {
+      fetchAdminGroups();
     }
   }, [activeTab, isAuthenticated]);
 
@@ -244,6 +269,74 @@ export default function AdminDashboard() {
     } finally {
       setIsLoadingTherapistWaitlist(false);
     }
+  };
+
+  const fetchAdminGroups = async () => {
+    setAdminGroupsLoading(true);
+    try {
+      const data = await api.getAdminGroups(100, 0);
+      if (data.success && Array.isArray(data.groups)) {
+        setAdminGroups(data.groups);
+      } else {
+        setAdminGroups([]);
+      }
+    } catch (error) {
+      const err = error as { message?: string; status?: number };
+      const message = err?.message || "Failed to fetch community groups.";
+      console.warn("Error fetching admin groups:", message, err?.status);
+      setNotice({
+        title: "Error",
+        message: err?.status === 401 ? "Unauthorized. Please log out and log in again." : message,
+      });
+      setAdminGroups([]);
+    } finally {
+      setAdminGroupsLoading(false);
+    }
+  };
+
+  const openGroupMembers = async (group: AdminGroup) => {
+    setMembersModalGroup(group);
+    setAdminGroupMembers([]);
+    setAdminGroupMembersLoading(true);
+    try {
+      const data = await api.getAdminGroupMembers(group.id);
+      if (data.success && Array.isArray(data.members)) {
+        setAdminGroupMembers(data.members);
+      }
+    } catch (error) {
+      console.error("Error fetching group members:", error);
+      setNotice({ title: "Error", message: "Failed to load members." });
+    } finally {
+      setAdminGroupMembersLoading(false);
+    }
+  };
+
+  const handleDeleteAdminGroup = async (group: AdminGroup) => {
+    setConfirmState({
+      open: true,
+      title: "Delete group",
+      message: `Delete group "${group.name}"? This will remove the group and all its members. This action cannot be undone.`,
+      confirmText: "Delete",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        setDeletingGroupId(group.id);
+        try {
+          const data = await api.deleteAdminGroup(group.id);
+          if (data.success) {
+            setNotice({ title: "Deleted", message: "Group deleted successfully." });
+            fetchAdminGroups();
+            setMembersModalGroup((prev) => (prev?.id === group.id ? null : prev));
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to delete group." });
+          }
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : "Failed to delete group.";
+          setNotice({ title: "Error", message: msg });
+        } finally {
+          setDeletingGroupId(null);
+        }
+      },
+    });
   };
 
   const handleUnblock = async (ipAddress: string) => {
@@ -458,6 +551,13 @@ export default function AdminDashboard() {
             <UserCheck className={styles.tabIcon} />
             Therapist Waitlist ({therapistWaitlist.length})
           </button>
+          <button
+            className={`${styles.tab} ${activeTab === "groups" ? styles.active : ""}`}
+            onClick={() => setActiveTab("groups")}
+          >
+            <MessageCircle className={styles.tabIcon} />
+            Community Groups ({adminGroups.length})
+          </button>
         </div>
 
         {activeTab === "feedback" ? (
@@ -654,6 +754,67 @@ export default function AdminDashboard() {
                       >
                         <Trash2 className={styles.buttonIcon} />
                         {deletingWaitlistId === entry.id ? "Deleting..." : "Delete"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        ) : activeTab === "groups" ? (
+          adminGroupsLoading ? (
+            <div className={styles.loading}>Loading community groups...</div>
+          ) : adminGroups.length === 0 ? (
+            <div className={styles.emptyState}>
+              <MessageCircle className={styles.emptyIcon} />
+              <p>No community groups found.</p>
+            </div>
+          ) : (
+            <div className={styles.feedbacksGrid}>
+              {adminGroups.map((group) => (
+                <Card key={group.id} className={styles.feedbackCard}>
+                  <CardHeader>
+                    <CardTitle className={styles.cardTitle}>
+                      <MessageCircle className={styles.icon} />
+                      {group.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={styles.info}>
+                      <div className={styles.infoItem}>
+                        <Users className={styles.infoIcon} />
+                        <span><strong>Members:</strong> {group.member_count}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <User className={styles.infoIcon} />
+                        <span><strong>Created by:</strong> {group.created_by}</span>
+                      </div>
+                      {group.description && (
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>Description:</span>
+                          <span>{group.description}</span>
+                        </div>
+                      )}
+                      <div className={styles.infoItem}>
+                        <span className={styles.label}>Created:</span>
+                        <span>{formatDateTime(group.created_at)}</span>
+                      </div>
+                    </div>
+                    <div className={styles.actions}>
+                      <Button
+                        variant="outline"
+                        onClick={() => openGroupMembers(group)}
+                      >
+                        <Eye className={styles.buttonIcon} />
+                        View members
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteAdminGroup(group)}
+                        disabled={deletingGroupId === group.id}
+                      >
+                        <Trash2 className={styles.buttonIcon} />
+                        {deletingGroupId === group.id ? "Deleting..." : "Delete"}
                       </Button>
                     </div>
                   </CardContent>
@@ -987,6 +1148,27 @@ export default function AdminDashboard() {
         }
       >
         <p>{notice?.message}</p>
+      </ModalDialog>
+
+      <ModalDialog
+        open={!!membersModalGroup}
+        title={membersModalGroup ? `Members — ${membersModalGroup.name}` : "Members"}
+        onClose={() => { setMembersModalGroup(null); setAdminGroupMembers([]); }}
+      >
+        {adminGroupMembersLoading ? (
+          <p>Loading members...</p>
+        ) : adminGroupMembers.length === 0 ? (
+          <p>No members in this group.</p>
+        ) : (
+          <ul className={styles.membersList}>
+            {adminGroupMembers.map((m) => (
+              <li key={m.user_id} className={styles.memberItem}>
+                <strong>{m.username}</strong>
+                <span className={styles.muted}>Joined {formatDateTime(m.joined_at)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </ModalDialog>
     </div>
   );
