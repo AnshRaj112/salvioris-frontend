@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./Community.module.scss";
 import { groupApi, chatApi, getMe, Group, GroupMessage, GroupMember, CreateGroupData } from "../lib/api";
 import { Button } from "../components/ui/button";
@@ -16,6 +17,7 @@ interface ActiveGroup extends Group {
 }
 
 export default function CommunityPage() {
+  const router = useRouter();
   const [groups, setGroups] = useState<Group[]>([]);
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState("");
@@ -44,6 +46,8 @@ export default function CommunityPage() {
   const [deleting, setDeleting] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const activeGroupRef = useRef<ActiveGroup | null>(null);
@@ -51,6 +55,25 @@ export default function CommunityPage() {
   const lastLoadedGroupIdRef = useRef<string | null>(null);
   const historyRequestIdRef = useRef(0);
   const oldestMessageRef = useRef<string | null>(null);
+
+  // Require authentication: redirect to signin if not logged in
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const token = window.localStorage.getItem("session_token");
+    if (!token) {
+      router.replace("/signin?redirect=/community");
+      return;
+    }
+    getMe()
+      .then((me) => {
+        if (!me) {
+          router.replace("/signin?redirect=/community");
+          return;
+        }
+        setIsAuthenticated(true);
+      })
+      .finally(() => setIsCheckingAuth(false));
+  }, [router]);
 
   // Keep refs in sync
   useEffect(() => {
@@ -60,15 +83,12 @@ export default function CommunityPage() {
     oldestMessageRef.current = messages.length > 0 ? messages[0].created_at : null;
   }, [messages]);
 
-  // Establish a single WebSocket connection
+  // Establish a single WebSocket connection (only when authenticated)
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isAuthenticated) return;
 
     const token = window.localStorage.getItem("session_token");
-    if (!token) {
-      console.warn("No session token found, WebSocket will not connect");
-      return;
-    }
+    if (!token) return;
 
     const url = `${WS_BASE_URL}?token=${encodeURIComponent(token)}`;
     const ws = new WebSocket(url);
@@ -142,8 +162,9 @@ export default function CommunityPage() {
     // The actual subscription is handled by the separate useEffect below
   }, [activeGroup?.id]);
 
-  // Load initial groups
+  // Load initial groups (only when authenticated)
   useEffect(() => {
+    if (!isAuthenticated) return;
     const fetchGroups = async () => {
       try {
         const res = await groupApi.getGroups(50, 0, search, tag);
@@ -153,12 +174,13 @@ export default function CommunityPage() {
       }
     };
     fetchGroups();
-  }, [search, tag]);
+  }, [isAuthenticated, search, tag]);
 
-  // Load current user once
+  // Load current user once (only when authenticated)
   useEffect(() => {
+    if (!isAuthenticated) return;
     getMe().then((me) => setCurrentUserID(me?.user_id ?? null));
-  }, []);
+  }, [isAuthenticated]);
 
   // Load members when active group changes
   useEffect(() => {
@@ -413,6 +435,17 @@ export default function CommunityPage() {
       setSending(false);
     }
   };
+
+  // Show loading while checking auth or before redirect
+  if (isCheckingAuth || !isAuthenticated) {
+    return (
+      <main className={styles.communityPage}>
+        <div className={styles.container}>
+          <p className={styles.subtitle}>Loading...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.communityPage}>

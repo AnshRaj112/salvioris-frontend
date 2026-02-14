@@ -576,12 +576,13 @@ export const api = {
     return data as GetVentsResponse;
   },
 
-  // Journaling routes
+  // Journaling routes (require authentication)
   createJournal: async (data: CreateJournalData): Promise<CreateJournalResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/journals`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(data),
     });
@@ -603,6 +604,7 @@ export const api = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
     });
 
@@ -1077,6 +1079,7 @@ export const groupApi = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
     });
     
@@ -1238,6 +1241,7 @@ export const groupApi = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
     });
 

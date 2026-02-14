@@ -10,7 +10,7 @@ export function Footer() {
       // { label: "Crisis Support", href: "/crisis" },
       // { label: "How It Works", href: "/how-it-works" },
       { label: "Vent your heart out", href: "/vent" },
-      { label: "Journaling", href: "/journal" },
+      { label: "Journaling", href: "/journaling" },
       { label: "Community Forum", href: "/community" },
       // { label: "How It Works", href: "/how-it-works" },
     ],

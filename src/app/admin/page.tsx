@@ -147,6 +147,18 @@ export default function AdminDashboard() {
   });
   const [isConfirmBusy, setIsConfirmBusy] = useState(false);
 
+  // If any admin API returns 401, clear session and redirect to login
+  const handleAdminApiError = (error: unknown, fallbackMessage: string) => {
+    const err = error as { message?: string; status?: number };
+    if (err?.status === 401) {
+      localStorage.removeItem("admin");
+      localStorage.removeItem("admin_token");
+      window.location.replace("/admin-login");
+      return;
+    }
+    setNotice({ title: "Error", message: err?.message || fallbackMessage });
+  };
+
   // Check authentication first, before anything else
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -217,13 +229,7 @@ export default function AdminDashboard() {
         });
       }
     } catch (e) {
-      const err = e as { message?: string; status?: number };
-      const msg = err?.message || (e instanceof Error ? e.message : String(e));
-      console.error("Error fetching insights:", msg, err?.status ?? "", e);
-      setNotice({
-        title: "Error",
-        message: msg || "Failed to load insights. Check network and admin auth.",
-      });
+      handleAdminApiError(e, "Failed to load insights. Check network and admin auth.");
       setInsights(null);
     } finally {
       setInsightsLoading(false);
@@ -260,7 +266,7 @@ export default function AdminDashboard() {
         setApprovedTherapists(approvedData.therapists || []);
       }
     } catch (error) {
-      console.error("Error fetching therapists:", error);
+      handleAdminApiError(error, "Failed to fetch therapists.");
     } finally {
       setIsLoading(false);
     }
@@ -274,8 +280,7 @@ export default function AdminDashboard() {
         setBlockedIPs(data.blocked_ips || []);
       }
     } catch (error) {
-      console.error("Error fetching blocked IPs:", error);
-      setNotice({ title: "Error", message: "Failed to fetch blocked IPs." });
+      handleAdminApiError(error, "Failed to fetch blocked IPs.");
     } finally {
       setIsLoadingIPs(false);
     }
@@ -289,8 +294,7 @@ export default function AdminDashboard() {
         setFeedbacks(data.feedbacks || []);
       }
     } catch (error) {
-      console.error("Error fetching feedbacks:", error);
-      setNotice({ title: "Error", message: "Failed to fetch feedbacks." });
+      handleAdminApiError(error, "Failed to fetch feedbacks.");
     } finally {
       setIsLoadingFeedbacks(false);
     }
@@ -304,8 +308,7 @@ export default function AdminDashboard() {
         setContacts(data.contacts || []);
       }
     } catch (error) {
-      console.error("Error fetching contacts:", error);
-      setNotice({ title: "Error", message: "Failed to fetch contacts." });
+      handleAdminApiError(error, "Failed to fetch contacts.");
     } finally {
       setIsLoadingContacts(false);
     }
@@ -319,8 +322,7 @@ export default function AdminDashboard() {
         setUsers(data.users || []);
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
-      setNotice({ title: "Error", message: "Failed to fetch users." });
+      handleAdminApiError(error, "Failed to fetch users.");
     } finally {
       setIsLoadingUsers(false);
     }
@@ -334,8 +336,7 @@ export default function AdminDashboard() {
         setUserWaitlist(data.entries || []);
       }
     } catch (error) {
-      console.error("Error fetching user waitlist:", error);
-      setNotice({ title: "Error", message: "Failed to fetch user waitlist." });
+      handleAdminApiError(error, "Failed to fetch user waitlist.");
     } finally {
       setIsLoadingUserWaitlist(false);
     }
@@ -349,8 +350,7 @@ export default function AdminDashboard() {
         setTherapistWaitlist(data.entries || []);
       }
     } catch (error) {
-      console.error("Error fetching therapist waitlist:", error);
-      setNotice({ title: "Error", message: "Failed to fetch therapist waitlist." });
+      handleAdminApiError(error, "Failed to fetch therapist waitlist.");
     } finally {
       setIsLoadingTherapistWaitlist(false);
     }
@@ -366,13 +366,7 @@ export default function AdminDashboard() {
         setAdminGroups([]);
       }
     } catch (error) {
-      const err = error as { message?: string; status?: number };
-      const message = err?.message || "Failed to fetch community groups.";
-      console.warn("Error fetching admin groups:", message, err?.status);
-      setNotice({
-        title: "Error",
-        message: err?.status === 401 ? "Unauthorized. Please log out and log in again." : message,
-      });
+      handleAdminApiError(error, "Failed to fetch community groups.");
       setAdminGroups([]);
     } finally {
       setAdminGroupsLoading(false);
@@ -389,8 +383,7 @@ export default function AdminDashboard() {
         setAdminGroupMembers(data.members);
       }
     } catch (error) {
-      console.error("Error fetching group members:", error);
-      setNotice({ title: "Error", message: "Failed to load members." });
+      handleAdminApiError(error, "Failed to load members.");
     } finally {
       setAdminGroupMembersLoading(false);
     }
@@ -415,8 +408,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: data.message || "Failed to delete group." });
           }
         } catch (error) {
-          const msg = error instanceof Error ? error.message : "Failed to delete group.";
-          setNotice({ title: "Error", message: msg });
+          handleAdminApiError(error, "Failed to delete group.");
         } finally {
           setDeletingGroupId(null);
         }
@@ -441,9 +433,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: "Failed to unblock IP address." });
           }
         } catch (error) {
-          console.error("Error unblocking IP:", error);
-          const errorMessage = error instanceof Error ? error.message : "Failed to unblock IP address";
-          setNotice({ title: "Error", message: errorMessage });
+          handleAdminApiError(error, "Failed to unblock IP address.");
         }
       },
     });
@@ -467,8 +457,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: "Failed to approve therapist." });
           }
         } catch (error) {
-          console.error("Error approving therapist:", error);
-          setNotice({ title: "Error", message: "Failed to approve therapist." });
+          handleAdminApiError(error, "Failed to approve therapist.");
         }
       },
     });
@@ -492,8 +481,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: "Failed to reject therapist." });
           }
         } catch (error) {
-          console.error("Error rejecting therapist:", error);
-          setNotice({ title: "Error", message: "Failed to reject therapist." });
+          handleAdminApiError(error, "Failed to reject therapist.");
         }
       },
     });
@@ -517,8 +505,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: data.message || "Failed to delete feedback." });
           }
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Failed to delete feedback";
-          setNotice({ title: "Error", message: errorMessage });
+          handleAdminApiError(error, "Failed to delete feedback.");
         } finally {
           setDeletingFeedbackId(null);
         }
@@ -544,8 +531,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: data.message || "Failed to delete contact." });
           }
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Failed to delete contact";
-          setNotice({ title: "Error", message: errorMessage });
+          handleAdminApiError(error, "Failed to delete contact.");
         } finally {
           setDeletingContactId(null);
         }
@@ -571,8 +557,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: data.message || "Failed to delete user." });
           }
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Failed to delete user";
-          setNotice({ title: "Error", message: errorMessage });
+          handleAdminApiError(error, "Failed to delete user.");
         } finally {
           setDeletingUserId(null);
         }
@@ -598,9 +583,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: data.message || "Failed to delete waitlist entry." });
           }
         } catch (error) {
-          console.error("Error deleting user waitlist entry:", error);
-          const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
-          setNotice({ title: "Error", message: errorMessage });
+          handleAdminApiError(error, "Failed to delete waitlist entry.");
         } finally {
           setDeletingWaitlistId(null);
         }
@@ -626,9 +609,7 @@ export default function AdminDashboard() {
             setNotice({ title: "Error", message: data.message || "Failed to delete waitlist entry." });
           }
         } catch (error) {
-          console.error("Error deleting therapist waitlist entry:", error);
-          const errorMessage = error instanceof Error ? error.message : "Failed to delete waitlist entry";
-          setNotice({ title: "Error", message: errorMessage });
+          handleAdminApiError(error, "Failed to delete waitlist entry.");
         } finally {
           setDeletingWaitlistId(null);
         }
