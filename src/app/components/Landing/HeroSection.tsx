@@ -33,7 +33,7 @@ const HeroSection = () => {
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
           <Link href="/vent">
             <Button variant="hero" className="w-full sm:w-auto">
-              Vent Your Heart Out
+              Join as a User
             </Button>
           </Link>
           {/* <Link href="/signup">
