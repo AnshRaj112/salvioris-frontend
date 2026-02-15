@@ -2,12 +2,15 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import styles from "./Community.module.scss";
 import { groupApi, chatApi, getMe, Group, GroupMessage, GroupMember, CreateGroupData } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { ModalDialog } from "../components/ui/ModalDialog";
+
+const COMMUNITY_LOCKED = true;
 
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws/chat";
@@ -442,6 +445,26 @@ export default function CommunityPage() {
       <main className={styles.communityPage}>
         <div className={styles.container}>
           <p className={styles.subtitle}>Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (COMMUNITY_LOCKED) {
+    return (
+      <main className={styles.communityPage}>
+        <div className={styles.container}>
+          <div className={styles.underDevelopment}>
+            <h1 className={styles.title}>
+              <span className={styles.titleHighlight}>Community</span>
+            </h1>
+            <p className={styles.underDevelopmentText}>
+              Under development. Will be available soon.
+            </p>
+            <Button asChild variant="healing">
+              <Link href="/home">Back to Home</Link>
+            </Button>
+          </div>
         </div>
       </main>
     );

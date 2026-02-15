@@ -192,10 +192,10 @@ export default function HomePage() {
           <div className={styles.communityCard}>
             <div className={styles.cardTitle}>Community</div>
             <div className={styles.cardText}>
-              Join supportive group chats. Create or discover community spaces that feel safe for you.
+              Under development. Will be available soon.
             </div>
-            <Button asChild variant="healing">
-              <Link href="/community">Go to Community</Link>
+            <Button variant="healing" disabled>
+              Coming soon
             </Button>
           </div>
         </div>

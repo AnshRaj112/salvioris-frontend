@@ -49,6 +49,23 @@
   max-width: 600px;
 }
 
+.underDevelopment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1.25rem;
+  padding: 3rem 1.5rem;
+  min-height: 40vh;
+}
+
+.underDevelopmentText {
+  font-size: 1rem;
+  color: hsl(var(--muted-foreground));
+  margin: 0;
+}
+
 .content {
   flex: 1;
   display: grid;
