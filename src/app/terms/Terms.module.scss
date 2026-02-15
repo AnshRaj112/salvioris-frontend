@@ -1,0 +1,167 @@
+/* Reusing the same structure as Privacy.module.scss for consistency */
+
+.termsPage {
+  min-height: 100vh;
+  width: 100%;
+  transition: background 0.5s ease-in-out;
+  padding-bottom: 4rem;
+
+  &.userMode {
+    background: linear-gradient(180deg, #1d2935 0%, #283848 100%);
+    color: white;
+
+    .toggleButton {
+      &.active {
+        color: #1d2935;
+      }
+    }
+  }
+
+  &.therapistMode {
+    background: linear-gradient(
+      135deg,
+      #c199d6 15%,
+      #c49cd8 25%,
+      #caa3dc 45%,
+      #caa3dc 65%,
+      #d4aee3 85%,
+      #d4aee3 100%
+    );
+    background-size: 200% 200%;
+    animation: gradientShift 15s ease infinite;
+    color: white;
+
+    .toggleButton {
+      &.active {
+        color: #6B4C93;
+      }
+    }
+  }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.navContainer {
+    padding: 2rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.title {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.toggleContainer {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 2rem;
+    padding: 0.35rem;
+    display: flex;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.toggleButton {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 1.7rem;
+    transition: all 0.3s ease;
+    outline: none;
+    
+    &:hover:not(.active) {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    &.active {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transform: scale(1.02);
+    }
+}
+
+.contentContainer {
+    max-width: 900px;
+    margin: 2rem auto 0;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-out;
+
+    h2 {
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 2rem 0 0.75rem;
+    }
+
+    p {
+        line-height: 1.7;
+        margin-bottom: 1rem;
+        font-size: 1.05rem;
+        opacity: 0.95;
+    }
+
+    ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+        margin-bottom: 1.5rem;
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+    }
+}
+
+.backLink {
+    display: inline-block;
+    margin-top: 3rem;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    border-bottom: 1px solid transparent;
+
+    &:hover {
+        opacity: 1;
+        border-bottom-color: white;
+    }
+}
+
+.footer {
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
