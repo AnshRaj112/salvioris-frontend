@@ -1,60 +1,95 @@
-import type { Metadata } from "next";
-import { SupportSections } from "../components/SupportSections/SupportSections";
-import Link from "next/link";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Help Center",
-  description: "Get help using SALVIORIS — for users and therapists.",
-};
+import { useState } from "react";
+import Link from "next/link";
+import styles from "./Help.module.scss";
+
+type ViewMode = "user" | "therapist";
 
 export default function HelpCenterPage() {
+  const [mode, setMode] = useState<ViewMode>("user");
+
   return (
-    <SupportSections
-      pageTitle="Help Center"
-      userTitle="Help Center"
-      userContent={
-        <>
-          <p className="mb-4">
-            Find answers and get support for your SALVIORIS experience.
-          </p>
-          <ul className="list-disc pl-5 space-y-2 mb-4">
-            <li>
-              <Link href="/faq">FAQ</Link> — Common questions about account, sessions, and privacy.
-            </li>
-            <li>
-              <Link href="/contact">Contact us</Link> — Reach our support team by email or form.
-            </li>
-            <li>
-              <Link href="/feedback">Feedback</Link> — Share suggestions to help us improve.
-            </li>
-          </ul>
-          <p>
-            For crisis support, call <strong>14416</strong> or emergency <strong>108</strong>.
-          </p>
-        </>
-      }
-      therapistTitle="Therapist help & resources"
-      therapistContent={
-        <>
-          <p className="mb-4">
-            Resources and support for therapists on the SALVIORIS platform.
-          </p>
-          <ul className="list-disc pl-5 space-y-2 mb-4">
-            <li>
-              <Link href="/faq">FAQ</Link> — Joining the network, verification, and scheduling.
-            </li>
-            <li>
-              <Link href="/contact">Contact us</Link> — Partner and technical support.
-            </li>
-            <li>
-              <Link href="/therapist-signup">Join our network</Link> — Apply to become a therapist.
-            </li>
-          </ul>
-          <p>
-            For urgent partner issues, use the contact form and we&apos;ll respond as soon as possible.
-          </p>
-        </>
-      }
-    />
+    <div className={`${styles.helpPage} ${mode === "user" ? styles.userMode : styles.therapistMode}`}>
+      <div className={styles.navContainer}>
+        <h1 className={styles.title}>Help Center</h1>
+
+        <div className={styles.toggleContainer}>
+          <button
+            className={`${styles.toggleButton} ${mode === "user" ? styles.active : ""}`}
+            onClick={() => setMode("user")}
+          >
+            For Users
+          </button>
+          <button
+            className={`${styles.toggleButton} ${mode === "therapist" ? styles.active : ""}`}
+            onClick={() => setMode("therapist")}
+          >
+            For Therapists
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.contentContainer} key={mode}>
+        {mode === "user" ? (
+          <div>
+            <h2>User Support</h2>
+            <p>
+              Welcome to the Help Center. Here you can find resources to guide you through your journey
+              on Serenify.
+            </p>
+
+            <h3>Quick Links</h3>
+            <ul>
+              <li>
+                <Link href="/faq">FAQ</Link> — Find answers to common questions about your account, sessions, and privacy.
+              </li>
+              <li>
+                <Link href="/contact">Contact Support</Link> — Reach out to our dedicated support team via email or form.
+              </li>
+              <li>
+                <Link href="/feedback">Share Feedback</Link> — We value your input. Let us know how we can improve.
+              </li>
+            </ul>
+
+            <h3>Emergency Resources</h3>
+            <p>
+              If you or someone you know is in immediate danger, please do not use this site.
+              <strong> Call 14416 or 108 immediately.</strong>
+            </p>
+          </div>
+        ) : (
+          <div>
+            <h2>Therapist Resources</h2>
+            <p>
+              Support and tools designed to help you manage your practice and connect with clients effectively.
+            </p>
+
+            <h3>Quick Links</h3>
+            <ul>
+              <li>
+                <Link href="/faq">Therapist FAQ</Link> — Information on joining the network, verification processes, and scheduling.
+              </li>
+              <li>
+                <Link href="/contact">Partner Support</Link> — Specific support channels for technical or administrative issues.
+              </li>
+              <li>
+                <Link href="/therapist-signup">Join Network</Link> — Application process for new therapists.
+              </li>
+            </ul>
+
+            <h3>Administrative Assistance</h3>
+            <p>
+              For urgent account or billing issues, please use the priority contact form in your dashboard
+              or email our partner support line directly.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.footer}>
+        <Link href="/" className={styles.backLink}>← Back to Home</Link>
+      </div>
+    </div>
   );
 }

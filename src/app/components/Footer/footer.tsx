@@ -75,7 +75,7 @@ export function Footer() {
               </div> */}
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="w-4 h-4" />
-                <span>support@salvioris.com</span>
+                <span>contact@salvioris.com</span>
               </div>
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />

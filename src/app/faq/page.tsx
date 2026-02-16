@@ -1,78 +1,110 @@
-import type { Metadata } from "next";
-import { SupportSections } from "../components/SupportSections/SupportSections";
-import Link from "next/link";
+"use client";
 
-export const metadata: Metadata = {
-  title: "FAQ",
-  description: "Frequently asked questions about SALVIORIS — for users and therapists.",
-};
+import { useState } from "react";
+import Link from "next/link";
+import styles from "./FAQ.module.scss";
+
+type ViewMode = "user" | "therapist";
 
 export default function FAQPage() {
+  const [mode, setMode] = useState<ViewMode>("user");
+
   return (
-    <SupportSections
-      pageTitle="FAQ"
-      userTitle="Frequently asked questions"
-      userContent={
-        <>
-          <div className="space-y-4">
-            <div>
-              <strong>How do I create an account?</strong>
-              <p className="mt-1">
-                Go to <Link href="/signup">Sign up</Link>, enter your details, and follow the steps. Your data is kept private and secure.
-              </p>
+    <div className={`${styles.faqPage} ${mode === "user" ? styles.userMode : styles.therapistMode}`}>
+      <div className={styles.navContainer}>
+        <h1 className={styles.title}>Frequently Asked Questions</h1>
+
+        <div className={styles.toggleContainer}>
+          <button
+            className={`${styles.toggleButton} ${mode === "user" ? styles.active : ""}`}
+            onClick={() => setMode("user")}
+          >
+            For Users
+          </button>
+          <button
+            className={`${styles.toggleButton} ${mode === "therapist" ? styles.active : ""}`}
+            onClick={() => setMode("therapist")}
+          >
+            For Therapists
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.contentContainer} key={mode}>
+        {mode === "user" ? (
+          <div>
+            <div className={styles.faqItem}>
+              <h3>How do I create an account?</h3>
+              <div>
+                Go to <Link href="/signup">Sign up</Link>, enter your details, and follow the steps.
+                Your data is kept private and secure.
+              </div>
             </div>
-            <div>
-              <strong>Is my information private?</strong>
-              <p className="mt-1">
-                Yes. We are committed to privacy. Sessions and personal information are handled in line with our <Link href="/privacy">Privacy Policy</Link>.
-              </p>
+
+            <div className={styles.faqItem}>
+              <h3>Is my information private?</h3>
+              <div>
+                Yes. We are completely committed to privacy. All sessions and personal information are
+                handled in strict accordance with our <Link href="/privacy">Privacy Policy</Link>.
+              </div>
             </div>
-            <div>
-              <strong>How do I find a therapist?</strong>
-              <p className="mt-1">
-                After signing in, you can explore the platform and connect with licensed professionals. Use the tools available in your dashboard.
-              </p>
+
+            <div className={styles.faqItem}>
+              <h3>How do I find a therapist?</h3>
+              <div>
+                After signing in, you can explore the platform and connect with licensed professionals
+                using the matching tools available in your dashboard.
+              </div>
             </div>
-            <div>
-              <strong>What if I need help right now?</strong>
-              <p className="mt-1">
-                If you&apos;re in crisis, call <strong>14416</strong> or emergency <strong>108</strong>. For non-urgent support, see <Link href="/help">Help Center</Link> or <Link href="/contact">Contact us</Link>.
-              </p>
-            </div>
-          </div>
-        </>
-      }
-      therapistTitle="FAQ for therapists"
-      therapistContent={
-        <>
-          <div className="space-y-4">
-            <div>
-              <strong>How do I join the network?</strong>
-              <p className="mt-1">
-                Complete the application at <Link href="/therapist-signup">Join our network</Link>. You&apos;ll need your license details, education, and relevant documents. We review each application before approval.
-              </p>
-            </div>
-            <div>
-              <strong>How long does verification take?</strong>
-              <p className="mt-1">
-                We aim to review applications within a few business days. You&apos;ll receive an email once your account is approved or if we need more information.
-              </p>
-            </div>
-            <div>
-              <strong>What documents do I need?</strong>
-              <p className="mt-1">
-                Typically a valid license/certificate and degree proof. Exact requirements are listed on the <Link href="/therapist-signup">therapist signup</Link> page.
-              </p>
-            </div>
-            <div>
-              <strong>Who do I contact for partner support?</strong>
-              <p className="mt-1">
-                Email <a href="mailto:support@salvioris.com">support@salvioris.com</a> with &quot;Therapist support&quot; in the subject, or use <Link href="/contact">Contact us</Link>.
-              </p>
+
+            <div className={styles.faqItem}>
+              <h3>What if I need help right now?</h3>
+              <div>
+                If you&apos;re in crisis, please call <strong>14416</strong> or emergency <strong>108</strong> immediately.
+                For non-urgent support, visit our <Link href="/help">Help Center</Link>.
+              </div>
             </div>
           </div>
-        </>
-      }
-    />
+        ) : (
+          <div>
+            <div className={styles.faqItem}>
+              <h3>How do I join the network?</h3>
+              <div>
+                Complete the application at <Link href="/therapist-signup">Join our network</Link>.
+                You&apos;ll need to provide your license details, education history, and relevant documents.
+              </div>
+            </div>
+
+            <div className={styles.faqItem}>
+              <h3>How long does verification take?</h3>
+              <div>
+                We aim to review applications within a few business days. You&apos;ll receive an email notification
+                once your account is approved or if we require additional information.
+              </div>
+            </div>
+
+            <div className={styles.faqItem}>
+              <h3>What documents do I need?</h3>
+              <div>
+                Typically, you will need a valid professional license/certificate and proof of degree.
+                Exact requirements are listed on the application page.
+              </div>
+            </div>
+
+            <div className={styles.faqItem}>
+              <h3>Who do I contact for partner support?</h3>
+              <div>
+                Email <a href="mailto:support@salvioris.com">support@salvioris.com</a> with &quot;Therapist support&quot;
+                in the subject line, or use our <Link href="/contact">Contact form</Link>.
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.footer}>
+        <Link href="/" className={styles.backLink}>← Back to Home</Link>
+      </div>
+    </div>
   );
 }
