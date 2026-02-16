@@ -38,7 +38,7 @@ export function Footer() {
   const socialLinks = [
     { icon: Twitter, href: "https://x.com/salvioris", label: "Twitter" },
     { icon: Instagram, href: "https://www.instagram.com/salvioris_hq/", label: "Instagram" },
-    // { icon: Linkedin, href: "#", label: "LinkedIn" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/salvioris", label: "LinkedIn" },
   ];
 
   return (
