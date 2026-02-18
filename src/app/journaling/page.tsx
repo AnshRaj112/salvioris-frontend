@@ -48,8 +48,14 @@ export default function JournalingPage() {
     if (typeof window === "undefined") return;
 
     const userData = localStorage.getItem("user");
-    if (!userData) {
-      router.push("/signup?redirect=/journaling");
+    const sessionToken = localStorage.getItem("session_token");
+
+    // Check for both user data and session token
+    if (!userData || !sessionToken) {
+      // Clear potentially partial data
+      localStorage.removeItem("user");
+      localStorage.removeItem("session_token");
+      router.push("/signin?redirect=/journaling");
       return;
     }
 
@@ -58,7 +64,8 @@ export default function JournalingPage() {
       setUser(parsed);
     } catch {
       localStorage.removeItem("user");
-      router.push("/signup?redirect=/journaling");
+      localStorage.removeItem("session_token");
+      router.push("/signin?redirect=/journaling");
       return;
     }
   }, [router]);
@@ -75,6 +82,16 @@ export default function JournalingPage() {
         }
       } catch (err) {
         const apiError = err as ApiError;
+
+        // Handle 401 Unauthorized specifically
+        if (apiError.status === 401 || apiError.message?.toLowerCase().includes("unauthorized") || apiError.message?.toLowerCase().includes("authenticated")) {
+          // Session expired or invalid
+          localStorage.removeItem("user");
+          localStorage.removeItem("session_token");
+          router.push("/signin?redirect=/journaling");
+          return;
+        }
+
         setError(apiError.message || "Failed to load journals.");
       } finally {
         setIsLoading(false);
@@ -102,6 +119,15 @@ export default function JournalingPage() {
       }
     } catch (err) {
       const apiError = err as ApiError;
+
+      // Handle 401 Unauthorized specifically
+      if (apiError.status === 401) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("session_token");
+        router.push("/signin?redirect=/journaling");
+        return;
+      }
+
       setError(apiError.message || "Failed to save journal.");
     } finally {
       setIsSaving(false);
@@ -170,106 +196,105 @@ export default function JournalingPage() {
       </div>
 
       <div className={styles.mainContent}>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <div className={styles.headerTop}>
-            <h1 className={styles.title}>Your Journaling Space</h1>
-            <Button
-              variant="healing"
-              size="sm"
-              onClick={() => router.push("/home")}
-            >
-              Go to Home
-            </Button>
-          </div>
-          <p className={styles.subtitle}>
-            Capture your thoughts and feelings in a private space. Only you can
-            see your journals.
-          </p>
-        </div>
-
-        <div className={styles.journalForm}>
-          <div>
-            <label className={styles.label}>Title (optional)</label>
-            <Input
-              className={styles.input}
-              placeholder="Give your journal a gentle title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={styles.label}>Your Journal</label>
-            <Textarea
-              className={styles.textarea}
-              placeholder="Write what’s on your mind today..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-          </div>
-          {error && <div className={styles.error}>{error}</div>}
-          <div className={styles.actions}>
-            <Button
-              variant="healing"
-              disabled={isSaving || (!title.trim() && !content.trim())}
-              onClick={handleSave}
-            >
-              {isSaving ? "Saving..." : "Save Journal"}
-            </Button>
-          </div>
-        </div>
-
-        <div className={styles.journalsList}>
-          <div className={styles.journalsHeaderRow}>
-            <div className={styles.journalsTitle}>Previous Journals</div>
-            <div className={styles.journalsMeta}>
-              {isLoading
-                ? "Loading..."
-                : journals.length > 0
-                ? `${journals.length} entr${journals.length === 1 ? "y" : "ies"}`
-                : ""}
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className={styles.emptyState}>Loading your journals...</div>
-          ) : journals.length === 0 ? (
-            <div className={styles.emptyState}>
-              No journals yet. Start by writing your first reflection above.
-            </div>
-          ) : (
-            journals.map((journal) => (
-              <button
-                key={journal.id}
-                type="button"
-                className={`${styles.journalItem} ${
-                  selectedJournal?.id === journal.id && showJournalModal
-                    ? styles.journalItemActive
-                    : ""
-                }`}
-                onClick={() => {
-                  setSelectedJournal(journal);
-                  setShowJournalModal(true);
-                }}
+        <div className={styles.container}>
+          <div className={styles.header}>
+            <div className={styles.headerTop}>
+              <h1 className={styles.title}>Your Journaling Space</h1>
+              <Button
+                variant="healing"
+                size="sm"
+                onClick={() => router.push("/home")}
               >
-                <div className={styles.journalItemTitleRow}>
-                  <div className={styles.journalTitle}>
-                    {journal.title && journal.title.trim().length > 0
-                      ? journal.title
-                      : "Untitled journal"}
+                Go to Home
+              </Button>
+            </div>
+            <p className={styles.subtitle}>
+              Capture your thoughts and feelings in a private space. Only you can
+              see your journals.
+            </p>
+          </div>
+
+          <div className={styles.journalForm}>
+            <div>
+              <label className={styles.label}>Title (optional)</label>
+              <Input
+                className={styles.input}
+                placeholder="Give your journal a gentle title..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={styles.label}>Your Journal</label>
+              <Textarea
+                className={styles.textarea}
+                placeholder="Write what’s on your mind today..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+            </div>
+            {error && <div className={styles.error}>{error}</div>}
+            <div className={styles.actions}>
+              <Button
+                variant="healing"
+                disabled={isSaving || (!title.trim() && !content.trim())}
+                onClick={handleSave}
+              >
+                {isSaving ? "Saving..." : "Save Journal"}
+              </Button>
+            </div>
+          </div>
+
+          <div className={styles.journalsList}>
+            <div className={styles.journalsHeaderRow}>
+              <div className={styles.journalsTitle}>Previous Journals</div>
+              <div className={styles.journalsMeta}>
+                {isLoading
+                  ? "Loading..."
+                  : journals.length > 0
+                    ? `${journals.length} entr${journals.length === 1 ? "y" : "ies"}`
+                    : ""}
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className={styles.emptyState}>Loading your journals...</div>
+            ) : journals.length === 0 ? (
+              <div className={styles.emptyState}>
+                No journals yet. Start by writing your first reflection above.
+              </div>
+            ) : (
+              journals.map((journal) => (
+                <button
+                  key={journal.id}
+                  type="button"
+                  className={`${styles.journalItem} ${selectedJournal?.id === journal.id && showJournalModal
+                      ? styles.journalItemActive
+                      : ""
+                    }`}
+                  onClick={() => {
+                    setSelectedJournal(journal);
+                    setShowJournalModal(true);
+                  }}
+                >
+                  <div className={styles.journalItemTitleRow}>
+                    <div className={styles.journalTitle}>
+                      {journal.title && journal.title.trim().length > 0
+                        ? journal.title
+                        : "Untitled journal"}
+                    </div>
+                    <div className={styles.journalDate}>
+                      {formatDate(journal.created_at)}
+                    </div>
                   </div>
-                  <div className={styles.journalDate}>
-                    {formatDate(journal.created_at)}
+                  <div className={styles.journalPreview}>
+                    {getPreview(journal)}
                   </div>
-                </div>
-                <div className={styles.journalPreview}>
-                  {getPreview(journal)}
-                </div>
-              </button>
-            ))
-          )}
+                </button>
+              ))
+            )}
+          </div>
         </div>
-      </div>
       </div>
 
       {showFeedbackForm && (
