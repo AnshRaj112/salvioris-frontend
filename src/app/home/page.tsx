@@ -190,12 +190,12 @@ export default function HomePage() {
           </div>
 
           <div className={styles.communityCard}>
-            <div className={styles.cardTitle}>Community</div>
+            <div className={styles.cardTitle}>Community spaces</div>
             <div className={styles.cardText}>
-              Under development. Will be available soon.
+              Join supportive group chats and connect with others in a safe environment.
             </div>
-            <Button variant="healing" disabled>
-              Coming soon
+            <Button asChild variant="healing">
+              <Link href="/community">Join Community</Link>
             </Button>
           </div>
         </div>

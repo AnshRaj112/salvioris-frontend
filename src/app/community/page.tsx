@@ -10,7 +10,7 @@ import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { ModalDialog } from "../components/ui/ModalDialog";
 
-const COMMUNITY_LOCKED = true;
+const COMMUNITY_LOCKED = false;
 
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws/chat";
@@ -73,6 +73,7 @@ export default function CommunityPage() {
           router.replace("/signin?redirect=/community");
           return;
         }
+        setCurrentUserID(me.user_id);
         setIsAuthenticated(true);
       })
       .finally(() => setIsCheckingAuth(false));
@@ -93,68 +94,83 @@ export default function CommunityPage() {
     const token = window.localStorage.getItem("session_token");
     if (!token) return;
 
-    const url = `${WS_BASE_URL}?token=${encodeURIComponent(token)}`;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout;
+    let isMounted = true;
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-      setWsConnected(true);
-      // Subscribe will be handled by the separate useEffect when activeGroup changes
-    };
+    const connect = () => {
+      if (!isMounted) return;
+      const url = `${WS_BASE_URL}?token=${encodeURIComponent(token)}`;
+      ws = new WebSocket(url);
+      wsRef.current = ws;
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("WebSocket message received:", data);
-        
-        // Handle ChatEvent from backend: type, group_id, sender_id, username, message, timestamp
-        if (data.type === "message") {
-          // Use ref to get current activeGroup (avoids stale closure)
-          const currentGroup = activeGroupRef.current;
-          if (!currentGroup || data.group_id !== currentGroup.id) {
-            console.log("Message not for current group, ignoring");
-            return;
-          }
-          
-          // Convert ChatEvent to GroupMessage format
-          const message: GroupMessage = {
-            id: data.sender_id + "-" + Date.now(), // Generate temporary ID
-            group_id: data.group_id,
-            user_id: data.sender_id,
-            username: data.username || "Unknown",
-            message: data.message,
-            created_at: data.timestamp || new Date().toISOString(),
-          };
-          console.log("Adding message to state:", message);
-          setMessages((prev) => [...prev, message]);
+      ws.onopen = () => {
+        if (!isMounted) return;
+        console.log("WebSocket connected");
+        setWsConnected(true);
+        // If there's an active group, resubscribe immediately upon reconnect
+        if (activeGroupRef.current) {
+          ws?.send(
+            JSON.stringify({
+              type: "subscribe",
+              group_id: activeGroupRef.current.id,
+            })
+          );
         }
-      } catch (err) {
-        console.error("WebSocket message parse error:", err, event.data);
-      }
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          // Handle ChatEvent from backend: type, group_id, sender_id, username, message, timestamp
+          if (data.type === "message") {
+            const currentGroup = activeGroupRef.current;
+            if (!currentGroup || data.group_id !== currentGroup.id) {
+              return;
+            }
+            
+            // Convert ChatEvent to GroupMessage format
+            const message: GroupMessage = {
+              id: data.sender_id + "-" + Date.now(), // Generate temporary ID
+              group_id: data.group_id,
+              user_id: data.sender_id,
+              username: data.username || "Unknown",
+              message: data.message,
+              created_at: data.timestamp || new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, message]);
+          }
+        } catch (err) {
+          console.error("WebSocket message parse error:", err);
+        }
+      };
+
+      ws.onerror = (event) => {
+        console.warn("WebSocket connection error encountered");
+      };
+
+      ws.onclose = (event) => {
+        if (!isMounted) return;
+        console.log("WebSocket closed");
+        setWsConnected(false);
+        wsRef.current = null;
+        // Reconnect after a delay
+        reconnectTimeout = setTimeout(connect, 3000);
+      };
     };
 
-    ws.onerror = (event) => {
-      console.warn("WebSocket connection error", {
-        type: event.type,
-        readyState: ws.readyState,
-        url,
-      });
-      setWsConnected(false);
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket closed");
-      setWsConnected(false);
-      wsRef.current = null;
-    };
+    connect();
 
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
+      isMounted = false;
+      clearTimeout(reconnectTimeout);
+      if (ws) {
+        ws.onclose = null; // Prevent reconnect loop
         ws.close();
       }
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Update message handler when activeGroup changes
   useEffect(() => {
@@ -179,11 +195,7 @@ export default function CommunityPage() {
     fetchGroups();
   }, [isAuthenticated, search, tag]);
 
-  // Load current user once (only when authenticated)
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    getMe().then((me) => setCurrentUserID(me?.user_id ?? null));
-  }, [isAuthenticated]);
+
 
   // Load members when active group changes
   useEffect(() => {
@@ -197,13 +209,18 @@ export default function CommunityPage() {
           typeof window !== "undefined"
             ? window.localStorage.getItem("session_token")
             : null;
-        setIsMember(!!sessionToken && res.members.length > 0);
+        
+        const isMem = res.members.some((m) => m.user_id === currentUserID) || 
+                      activeGroup.created_by === currentUserID ||
+                      !!activeGroup.is_creator;
+        setIsMember(!!sessionToken && isMem);
       } catch {
         setMemberList([]);
+        setIsMember(false);
       }
     };
     loadMembers();
-  }, [activeGroup]);
+  }, [activeGroup, currentUserID]);
 
   // Subscribe to group over WebSocket when active group changes
   useEffect(() => {
