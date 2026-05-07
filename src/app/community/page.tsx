@@ -12,8 +12,14 @@ import { ModalDialog } from "../components/ui/ModalDialog";
 
 const COMMUNITY_LOCKED = false;
 
-const WS_BASE_URL =
-  process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws/chat";
+const getWsUrl = () => {
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    return process.env.NEXT_PUBLIC_WS_URL;
+  }
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  return apiUrl.replace(/^http/, "ws") + "/ws/chat";
+};
+const WS_BASE_URL = getWsUrl();
 
 interface ActiveGroup extends Group {
   is_member?: boolean;
