@@ -11,10 +11,19 @@ import {
   packageAndEncryptReport
 } from '../lib/crypto.service';
 
+export interface SecureChatMessage {
+  id: string;
+  senderId: string;
+  username?: string;
+  text: string;
+  timestamp: string | number | Date;
+  signature?: string;
+}
+
 interface SecureChatHook {
   keyring: DeviceKeyring | null;
   connected: boolean;
-  messages: Array<any>;
+  messages: SecureChatMessage[];
   sendSecureMessage: (text: string) => Promise<void>;
   submitDisclosureReport: (reportedMessageId: string, reason: string) => Promise<void>;
   loadingKeys: boolean;
@@ -28,7 +37,7 @@ export function useSecureChat(
 ): SecureChatHook {
   const [keyring, setKeyring] = useState<DeviceKeyring | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Array<any>>([]);
+  const [messages, setMessages] = useState<SecureChatMessage[]>([]);
   const [loadingKeys, setLoadingKeys] = useState<boolean>(true);
   
   const wsRef = useRef<WebSocket | null>(null);
@@ -126,16 +135,24 @@ export function useSecureChat(
           const plaintext = await decryptChatMessage(envelope, roomKeyRef.current);
           
           setMessages((prev) => [...prev, {
-            id: rawEvent.id || Date.now().toString(),
-            senderId: rawEvent.sender_id,
-            username: rawEvent.username || 'Anonymous',
+            id: String(rawEvent.id || Date.now().toString()),
+            senderId: String(rawEvent.sender_id || 'unknown'),
+            username: String(rawEvent.username || 'Anonymous'),
             text: plaintext,
-            timestamp: rawEvent.timestamp || new Date()
+            timestamp: rawEvent.timestamp || new Date(),
+            signature: rawEvent.signature ? String(rawEvent.signature) : undefined
           }]);
         } else {
           // Fallback handling for standard frames
           if (rawEvent.type === 'message' && rawEvent.text) {
-            setMessages((prev) => [...prev, rawEvent]);
+            setMessages((prev) => [...prev, {
+              id: String(rawEvent.id || Date.now().toString()),
+              senderId: String(rawEvent.sender_id || rawEvent.senderId || 'unknown'),
+              username: String(rawEvent.username || 'Anonymous'),
+              text: String(rawEvent.text),
+              timestamp: rawEvent.timestamp || new Date(),
+              signature: rawEvent.signature ? String(rawEvent.signature) : undefined
+            }]);
           }
         }
       } catch (err) {
