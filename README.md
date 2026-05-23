@@ -46,6 +46,19 @@ serenify-frontend/
 | **Validation** | [Zod](https://zod.dev/) | TypeScript-first schema declaration and validation. |
 | **Toast** | [Sonner](https://sonner.emilkowal.ski/) | An opinionated toast component for React. |
 
+## 🔐 Security Architecture (Client-Side E2EE & Privacy)
+
+The Serenify Frontend implements state-of-the-art client-side cryptographic systems and sandbox safeguards to maintain absolute user privacy and satisfy regulatory requirements.
+
+### 🔒 1. Client-Side End-to-End Encryption (E2EE)
+*   **Zero-Knowledge Storage:** Symmetric group room keys and device identity keypairs are kept within client-side memory and persisted as non-extractable Web Crypto API keys in browser **IndexedDB** databases. They are never sent to the backend.
+*   **Hybrid Encryption:** Messages are symmetrically encrypted with **AES-256-GCM** using fresh message keys. These keys are asymmetrically wrapped under the server's Moderation Public Key using ECIES (**X25519** ECDH key exchange + AES-GCM wrapping) to support governed moderation reports.
+*   **Cryptographic Binding & Ed25519 Signatures:** Ciphertext packets bind sender IDs and room identifiers to a SHA-256 digest, which is cryptographically signed using the client's **Ed25519** private identity key.
+
+### 🛡️ 2. Privacy & Sandbox Hardening
+*   **On-Device Safety Scan:** Rather than using central scanning servers that inspect plaintext messages, a **Web Worker thread** runs a local safety lexicon check directly in the user's browser, enabling crisis alerts and support counselor escalations locally.
+*   **Strict Sandbox Headers (CSP):** Employs strict Content Security Policy configuration scripts to establish strict frame-ancestor limits and script origins, preventing malicious cross-site scripting (XSS) code injections from retrieving cryptographic keyrings.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
