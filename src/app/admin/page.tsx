@@ -97,6 +97,20 @@ interface AbuseReport {
   encrypted_payload: string;
 }
 
+interface DecryptedReportItem {
+  messageId: string;
+  senderId: string;
+  plaintext: string;
+  signature: string;
+  timestamp: string;
+}
+
+interface DecryptedDisclosurePayload {
+  reportedMessage: DecryptedReportItem;
+  contextMessages: DecryptedReportItem[];
+  reportReason: string;
+}
+
 import { api } from "../lib/api";
 import { formatDateTime } from "../lib/time";
 
@@ -122,7 +136,7 @@ export default function AdminDashboard() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [abuseReports, setAbuseReports] = useState<AbuseReport[]>([]);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
-  const [decryptedReportMap, setDecryptedReportMap] = useState<Record<string, any>>({});
+  const [decryptedReportMap, setDecryptedReportMap] = useState<Record<string, DecryptedDisclosurePayload>>({});
   const [decryptingReportId, setDecryptingReportId] = useState<string | null>(null);
   const [reportJustification, setReportJustification] = useState("");
   const [deletingWaitlistId, setDeletingWaitlistId] = useState<string | null>(null);
@@ -217,6 +231,7 @@ export default function AdminDashboard() {
     } else if (activeTab === "reports") {
       fetchAbuseReports();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, isAuthenticated]);
 
   const fetchInsights = async () => {
@@ -320,7 +335,7 @@ export default function AdminDashboard() {
         try {
           const parsed = JSON.parse(adminData);
           moderatorId = parsed.id || parsed.user_id || "admin";
-        } catch (e) {
+        } catch {
           moderatorId = "admin";
         }
       }
@@ -351,8 +366,9 @@ export default function AdminDashboard() {
       }));
       setDecryptingReportId(null);
       setReportJustification("");
-    } catch (err: any) {
-      setNotice({ title: "Decryption Failed", message: err.message || "Cryptographic authentication failed." });
+    } catch (err) {
+      const error = err as Error;
+      setNotice({ title: "Decryption Failed", message: error.message || "Cryptographic authentication failed." });
     }
   };
 
@@ -1417,7 +1433,7 @@ export default function AdminDashboard() {
                             {decrypted.contextMessages.length === 0 ? (
                               <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b", fontStyle: "italic" }}>No context selected by reporting user.</p>
                             ) : (
-                              decrypted.contextMessages.map((msg: any) => (
+                              decrypted.contextMessages.map((msg: DecryptedReportItem) => (
                                 <div key={msg.messageId} style={{ backgroundColor: "#020617", border: "1px solid #1e293b", padding: "0.5rem", borderRadius: "0.25rem" }}>
                                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.625rem", color: "#2dd4bf", marginBottom: "0.25rem" }}>
                                     <span>Sender ID: {msg.senderId}</span>
