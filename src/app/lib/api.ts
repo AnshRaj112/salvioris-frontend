@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 function getAdminAuthHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -851,6 +851,33 @@ export const api = {
         "Content-Type": "application/json",
         ...getAdminAuthHeaders(),
       },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getAbuseReports: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/reports`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  blockGroupMember: async (groupId: string, userId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/groups/block`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders(),
+      },
+      body: JSON.stringify({ group_id: groupId, user_id: userId }),
     });
     const data = await response.json();
     if (!response.ok) {

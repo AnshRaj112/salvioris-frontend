@@ -86,6 +86,17 @@ interface AdminGroupMember {
   joined_at: string;
 }
 
+interface AbuseReport {
+  id: string;
+  reported_by: string;
+  reporter_username: string;
+  group_id: string;
+  group_name: string;
+  status: string;
+  created_at: string;
+  encrypted_payload: string;
+}
+
 import { api } from "../lib/api";
 import { formatDateTime } from "../lib/time";
 
@@ -106,9 +117,14 @@ export default function AdminDashboard() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isLoadingUserWaitlist, setIsLoadingUserWaitlist] = useState(false);
   const [isLoadingTherapistWaitlist, setIsLoadingTherapistWaitlist] = useState(false);
-  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "users" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist" | "groups" | "insights">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "blocked" | "users" | "feedback" | "contact" | "userWaitlist" | "therapistWaitlist" | "groups" | "insights" | "reports">("pending");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [abuseReports, setAbuseReports] = useState<AbuseReport[]>([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
+  const [decryptedReportMap, setDecryptedReportMap] = useState<Record<string, any>>({});
+  const [decryptingReportId, setDecryptingReportId] = useState<string | null>(null);
+  const [reportJustification, setReportJustification] = useState("");
   const [deletingWaitlistId, setDeletingWaitlistId] = useState<string | null>(null);
   const [deletingFeedbackId, setDeletingFeedbackId] = useState<string | null>(null);
   const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
@@ -198,6 +214,8 @@ export default function AdminDashboard() {
       fetchAdminGroups();
     } else if (activeTab === "insights") {
       fetchInsights();
+    } else if (activeTab === "reports") {
+      fetchAbuseReports();
     }
   }, [activeTab, isAuthenticated]);
 
@@ -249,6 +267,93 @@ export default function AdminDashboard() {
         window.location.href = "/admin-login";
       },
     });
+  };
+
+  const fetchAbuseReports = async () => {
+    setIsLoadingReports(true);
+    try {
+      const data = await api.getAbuseReports();
+      if (data.success) {
+        setAbuseReports(data.reports || []);
+      }
+    } catch (error) {
+      handleAdminApiError(error, "Failed to fetch secure abuse reports.");
+    } finally {
+      setIsLoadingReports(false);
+    }
+  };
+
+  const handleAdminBlockMember = async (groupId: string, userId: string, username: string) => {
+    setConfirmState({
+      open: true,
+      title: "Block User from Group Chat",
+      message: `Are you sure you want to block user "${username}" from this group chat? This will remove them and prevent them from ever joining again.`,
+      confirmText: "Block Member",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        try {
+          const data = await api.blockGroupMember(groupId, userId);
+          if (data.success) {
+            setNotice({ title: "Success", message: `User "${username}" has been successfully blocked and evicted from the group chat.` });
+            fetchAbuseReports();
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to block member from group." });
+          }
+        } catch (error) {
+          handleAdminApiError(error, "Failed to block member from group.");
+        }
+      },
+    });
+  };
+
+  const handleAuditedDecrypt = async (reportId: string) => {
+    if (reportJustification.trim().length < 10) {
+      setNotice({ title: "Justification Required", message: "Please provide a clinical/safety justification of at least 10 characters." });
+      return;
+    }
+
+    try {
+      const adminToken = localStorage.getItem("admin_token");
+      const adminData = localStorage.getItem("admin");
+      let moderatorId = "";
+      if (adminData) {
+        try {
+          const parsed = JSON.parse(adminData);
+          moderatorId = parsed.id || parsed.user_id || "admin";
+        } catch (e) {
+          moderatorId = "admin";
+        }
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/reports/review/${reportId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminToken || ""}`
+        },
+        body: JSON.stringify({
+          moderator_id: moderatorId,
+          reason: reportJustification.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Access denied: Decryption challenge failed.");
+      }
+
+      const res = await response.json();
+      const parsedData = JSON.parse(res.disclosed_data);
+
+      setDecryptedReportMap((prev) => ({
+        ...prev,
+        [reportId]: parsedData,
+      }));
+      setDecryptingReportId(null);
+      setReportJustification("");
+    } catch (err: any) {
+      setNotice({ title: "Decryption Failed", message: err.message || "Cryptographic authentication failed." });
+    }
   };
 
   const fetchTherapists = async () => {
@@ -718,6 +823,13 @@ export default function AdminDashboard() {
           >
             <BarChart3 className={styles.tabIcon} />
             Insights
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === "reports" ? styles.active : ""}`}
+            onClick={() => setActiveTab("reports")}
+          >
+            <AlertTriangle className={styles.tabIcon} />
+            Abuse Reports ({abuseReports.length})
           </button>
         </div>
 
@@ -1202,6 +1314,162 @@ export default function AdminDashboard() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+          )
+        ) : activeTab === "reports" ? (
+          isLoadingReports ? (
+            <div className={styles.contentLoading}>Loading secure abuse reports...</div>
+          ) : abuseReports.length === 0 ? (
+            <div className={styles.emptyState}>
+              <AlertTriangle className={styles.emptyIcon} />
+              <p>No secure abuse reports found.</p>
+            </div>
+          ) : (
+            <div className={styles.feedbacksGrid}>
+              {abuseReports.map((report) => {
+                const decrypted = decryptedReportMap[report.id];
+                return (
+                  <Card key={report.id} className={styles.feedbackCard} style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: "100%" }}>
+                    <CardHeader>
+                      <CardTitle className={styles.cardTitle}>
+                        <AlertTriangle className={styles.icon} />
+                        Secure Abuse Report #{report.id.slice(-6)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <div className={styles.info}>
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>Reporter:</span>
+                          <span>@{report.reporter_username || report.reported_by}</span>
+                        </div>
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>Group Chat:</span>
+                          <span>{report.group_name || report.group_id}</span>
+                        </div>
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>Submitted At:</span>
+                          <span>{formatDateTime(report.created_at)}</span>
+                        </div>
+                        <div className={styles.infoItem}>
+                          <span className={styles.label}>Status:</span>
+                          <span className={report.status === "open" ? styles.activeBadge : styles.inactiveBadge} style={{ backgroundColor: report.status === "open" ? "#f43f5e" : "#0ea5e9", color: "#fff", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem" }}>
+                            {report.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Decryption Control Enclave */}
+                      {!decrypted ? (
+                        <div style={{ backgroundColor: "#020617", border: "1px solid #334155", borderRadius: "0.5rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                          {decryptingReportId === report.id ? (
+                            <>
+                              <label style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#94a3b8" }}>JUSTIFICATION REQUIRED (HIPAA & WORM Logged)</label>
+                              <textarea
+                                value={reportJustification}
+                                onChange={(e) => setReportJustification(e.target.value)}
+                                placeholder="E.g., Reviewing user self-harm concern flagged by peer..."
+                                rows={2}
+                                style={{ width: "100%", backgroundColor: "#0f172a", border: "1px solid #334155", borderRadius: "0.25rem", padding: "0.5rem", color: "#f8fafc", fontSize: "0.875rem" }}
+                              />
+                              <div style={{ display: "flex", gap: "0.5rem" }}>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setDecryptingReportId(null);
+                                    setReportJustification("");
+                                  }}
+                                  size="sm"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={() => handleAuditedDecrypt(report.id)}
+                                  size="sm"
+                                >
+                                  Decrypt & View Messages
+                                </Button>
+                              </div>
+                            </>
+                          ) : (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Content is E2EE encrypted at rest. Click Decrypt to review under audit.</span>
+                              <Button
+                                onClick={() => {
+                                  setDecryptingReportId(report.id);
+                                  setReportJustification("");
+                                }}
+                                size="sm"
+                              >
+                                Decrypt Report
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                          <div style={{ borderBottom: "1px solid #334155", paddingBottom: "0.5rem" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "bold" }}>REPORTER EXPLANATION & CATEGORY</span>
+                            <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.875rem", color: "#f43f5e", fontWeight: "600" }}>{decrypted.reportReason}</p>
+                          </div>
+
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "bold" }}>CONTEXT MESSAGES (PRECEDING DIALOGUE)</span>
+                            {decrypted.contextMessages.length === 0 ? (
+                              <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b", fontStyle: "italic" }}>No context selected by reporting user.</p>
+                            ) : (
+                              decrypted.contextMessages.map((msg: any) => (
+                                <div key={msg.messageId} style={{ backgroundColor: "#020617", border: "1px solid #1e293b", padding: "0.5rem", borderRadius: "0.25rem" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.625rem", color: "#2dd4bf", marginBottom: "0.25rem" }}>
+                                    <span>Sender ID: {msg.senderId}</span>
+                                    <span>{new Date(msg.timestamp).toLocaleTimeString()}</span>
+                                  </div>
+                                  <p style={{ margin: 0, fontSize: "0.75rem", color: "#cbd5e1" }}>{msg.plaintext}</p>
+                                </div>
+                              ))
+                            )}
+                          </div>
+
+                          <div style={{ backgroundColor: "rgba(225, 29, 72, 0.1)", border: "1px solid rgba(225, 29, 72, 0.3)", borderRadius: "0.5rem", padding: "1rem" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#f43f5e", fontWeight: "bold", display: "block", marginBottom: "0.5rem" }}>REPORTED VIOLATION</span>
+                            <div style={{ backgroundColor: "#020617", border: "1px solid rgba(225, 29, 72, 0.2)", padding: "0.75rem", borderRadius: "0.25rem" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.625rem", color: "#f43f5e", marginBottom: "0.25rem" }}>
+                                    <span>Sender ID: {decrypted.reportedMessage.senderId}</span>
+                                    <span>{new Date(decrypted.reportedMessage.timestamp).toLocaleTimeString()}</span>
+                              </div>
+                              <p style={{ margin: 0, fontSize: "0.875rem", color: "#f8fafc", fontWeight: "bold" }}>{decrypted.reportedMessage.plaintext}</p>
+                            </div>
+                          </div>
+
+                          {/* Block Actions */}
+                          <div style={{ display: "flex", gap: "0.5rem", borderTop: "1px solid #334155", paddingTop: "1rem" }}>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleAdminBlockMember(report.group_id, decrypted.reportedMessage.senderId, decrypted.reportedMessage.senderId.slice(-6))}
+                              size="sm"
+                            >
+                              <Ban className={styles.buttonIcon} />
+                              Block Offender from Group
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setDecryptedReportMap((prev) => {
+                                  const updated = { ...prev };
+                                  delete updated[report.id];
+                                  return updated;
+                                });
+                              }}
+                              size="sm"
+                            >
+                              Purge Decrypted View
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )
         ) : activeTab === "blocked" ? (

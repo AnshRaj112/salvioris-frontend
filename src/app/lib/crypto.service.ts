@@ -261,14 +261,22 @@ export interface DisclosurePayload {
   reportReason: string;
 }
 
-// 5. Package and Encrypt a User-Generated Disclosure Report specifically for the Moderation Key
 export async function packageAndEncryptReport(
   reportedMessage: ReportItem,
   contextMessages: Array<ReportItem>,
   reportReason: string,
-  moderationPubKeyBytes: ArrayBuffer
+  moderationPubKeyBytes: ArrayBuffer | Uint8Array
 ): Promise<string> {
   const encoder = new TextEncoder();
+
+  // Normalize key data to exactly 32 bytes (256 bits) for raw X25519 import
+  let rawKeyBytes = new Uint8Array(moderationPubKeyBytes);
+  if (rawKeyBytes.length === 44) {
+    rawKeyBytes = rawKeyBytes.slice(12); // Extricates the raw 32-byte X25519 public key from the SPKI envelope
+  }
+  if (rawKeyBytes.length !== 32) {
+    throw new Error(`X25519 key data must be exactly 256 bits (32 bytes), received: ${rawKeyBytes.length} bytes`);
+  }
 
   // Package the reported messages and contexts
   const payload: DisclosurePayload = {
@@ -289,7 +297,7 @@ export async function packageAndEncryptReport(
 
   const recipientPubKey = await window.crypto.subtle.importKey(
     'raw',
-    moderationPubKeyBytes,
+    rawKeyBytes,
     { name: 'X25519' },
     true,
     []

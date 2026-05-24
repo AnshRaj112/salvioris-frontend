@@ -9,6 +9,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { ModalDialog } from "../components/ui/ModalDialog";
+import VentChatSelection from "../components/ui/VentChatSelection";
 
 const COMMUNITY_LOCKED = false;
 
@@ -57,6 +58,8 @@ export default function CommunityPage() {
   const [wsConnected, setWsConnected] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isReportingMode, setIsReportingMode] = useState(false);
+  const [successReportId, setSuccessReportId] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const activeGroupRef = useRef<ActiveGroup | null>(null);
@@ -571,8 +574,26 @@ export default function CommunityPage() {
 
           <div className={styles.chatPanel}>
             {activeGroup ? (
-              <>
-                <div className={styles.chatHeader}>
+              isReportingMode ? (
+                <VentChatSelection
+                  messages={messages}
+                  groupId={activeGroup.id}
+                  userId={currentUserID || ""}
+                  onCancel={() => setIsReportingMode(false)}
+                  onSuccess={(reportId) => {
+                    setIsReportingMode(false);
+                    setSuccessReportId(reportId);
+                    setTimeout(() => setSuccessReportId(null), 5000);
+                  }}
+                />
+              ) : (
+                <>
+                  {successReportId && (
+                    <div style={{ padding: "0.75rem", backgroundColor: "rgba(45, 212, 191, 0.1)", border: "1px solid #2dd4bf", color: "#2dd4bf", borderRadius: "0.375rem", fontSize: "0.875rem", margin: "1rem" }}>
+                      Report submitted securely. ID: {successReportId}
+                    </div>
+                  )}
+                  <div className={styles.chatHeader}>
                   <div>
                     <div className={styles.chatTitle}>{activeGroup.name}</div>
                     <div className={styles.chatMeta}>
@@ -621,6 +642,15 @@ export default function CommunityPage() {
                     {!isMember && !activeGroup.is_creator && (
                       <Button size="sm" onClick={handleJoin}>
                         Join
+                      </Button>
+                    )}
+                    {isMember && (
+                      <Button
+                        size="sm"
+                        onClick={() => setIsReportingMode(true)}
+                        style={{ marginLeft: "0.5rem", backgroundColor: "#e11d48", border: "none" }}
+                      >
+                        Report Abuse
                       </Button>
                     )}
                   </div>
@@ -703,7 +733,8 @@ export default function CommunityPage() {
                   )}
                 </div>
               </>
-            ) : (
+            )
+          ) : (
               <div className={styles.emptyChatState}>
                 Select a group from the left to start chatting in real time.
               </div>
