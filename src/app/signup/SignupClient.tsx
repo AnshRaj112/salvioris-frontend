@@ -30,6 +30,7 @@ export default function SignupClient() {
     password: "",
     confirmPassword: "",
     recoveryEmail: "",
+    referralCode: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +40,12 @@ export default function SignupClient() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Referral code check states
+  const [isCheckingReferral, setIsCheckingReferral] = useState(false);
+  const [referralValid, setReferralValid] = useState<boolean | null>(null);
+  const [referralError, setReferralError] = useState<string | null>(null);
+  const [referralTherapist, setReferralTherapist] = useState<string | null>(null);
 
   // Validate username format
   const validateUsername = (username: string): string | null => {
@@ -97,6 +104,52 @@ export default function SignupClient() {
     }
   }, [formData.username]);
 
+  // Debounced referral check
+  const checkReferralCode = async (code: string) => {
+    if (!code.trim()) {
+      setReferralValid(null);
+      setReferralError(null);
+      setReferralTherapist(null);
+      return;
+    }
+
+    setIsCheckingReferral(true);
+    setReferralError(null);
+    setReferralTherapist(null);
+    setReferralValid(null);
+
+    try {
+      const response = await api.validateReferralCode(code);
+      if (response.success) {
+        setReferralValid(true);
+        setReferralTherapist(response.therapist_name);
+      } else {
+        setReferralValid(false);
+        setReferralError(response.message || "Invalid referral code");
+      }
+    } catch (err) {
+      const apiError = err as ApiError;
+      setReferralValid(false);
+      setReferralError(apiError.message || "Invalid referral code");
+    } finally {
+      setIsCheckingReferral(false);
+    }
+  };
+
+  useEffect(() => {
+    const code = formData.referralCode;
+    if (code && code.trim().length >= 4) {
+      const timer = setTimeout(() => {
+        checkReferralCode(code);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setReferralValid(null);
+      setReferralError(null);
+      setReferralTherapist(null);
+    }
+  }, [formData.referralCode]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -135,6 +188,7 @@ export default function SignupClient() {
         username: formData.username,
         password: formData.password,
         recovery_email: formData.recoveryEmail || undefined,
+        referral_code: formData.referralCode || undefined,
       };
 
       const response = await api.privacySignup(signupData);
@@ -467,12 +521,86 @@ export default function SignupClient() {
                     </p>
                   </div>
 
+                  <div className={styles.formGroup}>
+                    <label htmlFor="referralCode" className={styles.label}>
+                      Referral Code{" "}
+                      <span style={{ color: "#666", fontWeight: "normal" }}>
+                        (Optional)
+                      </span>
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <Input
+                        id="referralCode"
+                        name="referralCode"
+                        type="text"
+                        placeholder="Enter referral code (e.g. SAL-XXXX-XXXX)"
+                        value={formData.referralCode}
+                        onChange={handleChange}
+                        className={styles.input}
+                        style={{
+                          paddingRight: "2.5rem",
+                        }}
+                      />
+                      {formData.referralCode && formData.referralCode.trim().length >= 4 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            right: "0.75rem",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          {isCheckingReferral ? (
+                            <span style={{ fontSize: "0.75rem", color: "#666" }}>Checking...</span>
+                          ) : referralValid === true ? (
+                            <CheckCircle2 size={20} style={{ color: "#22c55e" }} />
+                          ) : referralValid === false ? (
+                            <XCircle size={20} style={{ color: "#ef4444" }} />
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                    {referralError && (
+                      <p
+                        style={{
+                          color: "#ef4444",
+                          fontSize: "0.875rem",
+                          marginTop: "0.25rem",
+                        }}
+                      >
+                        {referralError}
+                      </p>
+                    )}
+                    {referralValid === true && referralTherapist && (
+                      <p
+                        style={{
+                          color: "#22c55e",
+                          fontSize: "0.875rem",
+                          marginTop: "0.25rem",
+                        }}
+                      >
+                        Valid referral! You will be connected to <strong>{referralTherapist}</strong>
+                      </p>
+                    )}
+                    <p
+                      style={{
+                        color: "#666",
+                        fontSize: "0.75rem",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      If you received a referral code from your therapist, enter it here to link automatically.
+                    </p>
+                  </div>
+
                   <Button
                     type="submit"
                     variant="healing"
                     className={styles.submitButton}
                     size="lg"
-                    disabled={isLoading || usernameAvailable === false || isCheckingUsername}
+                    disabled={isLoading || usernameAvailable === false || isCheckingUsername || isCheckingReferral || referralValid === false}
                   >
                     {isLoading ? "Creating Account..." : "Create Account"}
                     <ArrowRight className={styles.buttonIcon} />

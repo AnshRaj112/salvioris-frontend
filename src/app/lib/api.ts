@@ -902,6 +902,273 @@ export const api = {
     }
     return responseData;
   },
+
+  // --- REFERRAL & CONNECTION SYSTEM API INTEGRATIONS ---
+
+  validateReferralCode: async (code: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/validate-referral?code=${encodeURIComponent(code)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  generateReferralCode: async (data: { usage_limit?: number; expires_at?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/referrals`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+    const resData = await response.json();
+    if (!response.ok) {
+      throw { message: resData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return resData;
+  },
+
+  getReferralCodes: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/referrals`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  revokeReferralCode: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/referrals/${encodeURIComponent(id)}/revoke`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getReferralAnalytics: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/referrals/analytics`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getConnectedUsers: async (search?: string) => {
+    const params = search ? `?q=${encodeURIComponent(search)}` : '';
+    const response = await fetch(`${API_BASE_URL}/api/therapist/connections${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getPendingConnectionRequests: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/connection-requests`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  respondToConnectionRequest: async (id: string, approve: boolean) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/connection-requests/${encodeURIComponent(id)}/respond`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ approve }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  disconnectPatient: async (userId: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/connections/${encodeURIComponent(userId)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getTherapistMe: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  updateTherapistProfile: async (data: { specialization: string; phone: string; years_of_experience: number; dsm_awareness: string; therapy_types: string }) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+    const resData = await response.json();
+    if (!response.ok) {
+      throw { message: resData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return resData;
+  },
+
+  searchTherapists: async (params: { specialization?: string; location?: string; availability?: boolean; q?: string; limit?: number; skip?: number }) => {
+    const urlParams = new URLSearchParams();
+    if (params.specialization) urlParams.append('specialization', params.specialization);
+    if (params.location) urlParams.append('location', params.location);
+    if (params.availability) urlParams.append('availability', 'true');
+    if (params.q) urlParams.append('q', params.q);
+    if (params.limit) urlParams.append('limit', params.limit.toString());
+    if (params.skip) urlParams.append('skip', params.skip.toString());
+
+    const response = await fetch(`${API_BASE_URL}/api/therapists?${urlParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getTherapistDetails: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapists/${encodeURIComponent(id)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  requestConnection: async (id: string, note?: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapists/${encodeURIComponent(id)}/connect`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ note }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  disconnectTherapist: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapists/${encodeURIComponent(id)}/disconnect`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  getNotifications: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/notifications`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  markNotificationRead: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/notifications/${encodeURIComponent(id)}/read`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
 };
 
 // Group community forum interfaces
