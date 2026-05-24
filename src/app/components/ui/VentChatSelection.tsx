@@ -62,7 +62,7 @@ export default function VentChatSelection({
           const keyData = await keyResponse.json();
           escrowKeyB64 = keyData.escrow_public_key_b64;
         }
-      } catch (err) {
+      } catch {
         // Safe check fallback
       }
 
@@ -88,7 +88,7 @@ export default function VentChatSelection({
         } else {
           throw new Error(`Unexpected decoded escrow key length: ${decoded.length}`);
         }
-      } catch (e) {
+      } catch {
         // Standard random fallback bytes for local dev / error recovery
         keyBytes = new Uint8Array(32);
         window.crypto.getRandomValues(keyBytes);
@@ -162,15 +162,16 @@ export default function VentChatSelection({
             headers: { "Content-Type": "application/json", ...headers },
             body: JSON.stringify({ user_id: primaryMsg.user_id, action: "block" }),
           });
-        } catch (e) {
+        } catch {
           // Non-blocking
         }
       }
 
       onSuccess(result.report_id || "report-filed-successfully");
-    } catch (err: any) {
-      console.error("Report Encryption/Submission error: ", err);
-      setError(err.message || "An unexpected error occurred during encryption/submission.");
+    } catch (err) {
+      const error = err as Error;
+      console.error("Report Encryption/Submission error: ", error);
+      setError(error.message || "An unexpected error occurred during encryption/submission.");
     } finally {
       setIsSubmitting(false);
     }
