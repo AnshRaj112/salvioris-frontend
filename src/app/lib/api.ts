@@ -197,6 +197,7 @@ async function apiRequest<T>(
   try {
     const response = await fetch(url, config);
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
@@ -219,6 +220,7 @@ async function apiRequest<T>(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function parseResponse<T = any>(response: Response): Promise<T> {
   const contentType = response.headers.get("content-type");
   if (contentType && contentType.includes("application/json")) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Key, Plus, Users, Check, X, Bell, Search, Award, Shield, Activity, Calendar, Edit3, Settings } from "lucide-react";
+import { Key, Plus, Users, Check, X, Bell, Search, Award, Shield, Activity, Calendar, Edit3, Settings, CheckCircle, XCircle, Save } from "lucide-react";
 import { api, ApiError, Therapist } from "../lib/api";
 import styles from "./TherapistDashboard.module.scss";
 
@@ -78,7 +78,7 @@ export default function TherapistDashboard() {
   });
 
   // Global loading states
-  // Loading state handled by isLoading return above
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Authenticate therapist
@@ -103,28 +103,6 @@ export default function TherapistDashboard() {
       router.push("/therapist-signin");
     }
   }, [router]);
-
-  const fetchDirectory = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMsg(null);
-    try {
-      const res = await api.searchTherapists({
-        specialization: undefined,
-        location: undefined,
-        availability: undefined,
-        q: searchQuery || undefined,
-      });
-
-      if (res.success) {
-        // Handle therapists state
-      }
-    } catch (err) {
-      const apiError = err as ApiError;
-      setErrorMsg(apiError.message || "Failed to load therapist directory.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchQuery]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
@@ -506,10 +484,10 @@ export default function TherapistDashboard() {
                             <td className={`${styles.td} ${styles.codeCell}`}>{r.code}</td>
                             <td className={styles.td}>{new Date(r.created_at).toLocaleDateString()}</td>
                             <td className={styles.td}>
-                              {r.expires_at ? new Date(r.expires_at).toLocaleString() : &quot;Never&quot;}
+                              {r.expires_at ? new Date(r.expires_at).toLocaleString() : "Never"}
                             </td>
                             <td className={styles.td}>
-                              {r.usage_count} / {r.usage_limit ? r.usage_limit : &quot;&infin;&quot;}
+                              {r.usage_count} / {r.usage_limit ? r.usage_limit : "∞"}
                             </td>
                             <td className={styles.td}>
                               {r.is_revoked ? (

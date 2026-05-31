@@ -30,11 +30,7 @@ export default function TherapistSearchDirectory() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDirectory();
-  }, [specialization, location, availability]);
-
-  const fetchDirectory = async () => {
+  const fetchDirectory = useCallback(async () => {
     setIsLoading(true);
     setErrorMsg(null);
     try {
@@ -54,7 +50,11 @@ export default function TherapistSearchDirectory() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [specialization, location, availability, searchQuery]);
+
+  useEffect(() => {
+    fetchDirectory();
+  }, [fetchDirectory]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
