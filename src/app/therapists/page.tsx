@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Search, Filter, Award, Shield, MapPin, Calendar, ArrowRight, Activity, ChevronRight, Inbox } from "lucide-react";
 import { api, ApiError } from "../lib/api";
@@ -187,7 +187,7 @@ export default function TherapistSearchDirectory() {
               <div>
                 <h3 className={styles.emptyTitle}>No Therapists Found</h3>
                 <p className={styles.emptyText}>
-                  We couldn't find any certified therapists matching those filter options. Try expanding your filters or search keywords.
+                    We couldn&apos;t find any certified therapists matching those filter options. Try expanding your filters or search keywords.
                 </p>
               </div>
             </div>

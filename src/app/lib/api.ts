@@ -196,7 +196,15 @@ async function apiRequest<T>(
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    let data: any;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { success: false, message: text || `HTTP error! status: ${response.status}` };
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
@@ -209,6 +217,15 @@ async function apiRequest<T>(
     }
     throw { message: 'An unknown error occurred', status: 500 } as ApiError;
   }
+}
+
+async function parseResponse<T = any>(response: Response): Promise<T> {
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json() as T;
+  }
+  const text = await response.text();
+  return { success: false, message: text || `HTTP error! status: ${response.status}` } as unknown as T;
 }
 
 export const api = {
@@ -910,7 +927,7 @@ export const api = {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -926,7 +943,7 @@ export const api = {
       },
       body: JSON.stringify(data),
     });
-    const resData = await response.json();
+    const resData = await parseResponse(response);
     if (!response.ok) {
       throw { message: resData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -941,7 +958,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -956,7 +973,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -971,7 +988,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -987,7 +1004,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1002,7 +1019,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1018,7 +1035,7 @@ export const api = {
       },
       body: JSON.stringify({ approve }),
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1033,7 +1050,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1048,7 +1065,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1064,7 +1081,7 @@ export const api = {
       },
       body: JSON.stringify(data),
     });
-    const resData = await response.json();
+    const resData = await parseResponse(response);
     if (!response.ok) {
       throw { message: resData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1087,7 +1104,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1102,7 +1119,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1118,7 +1135,7 @@ export const api = {
       },
       body: JSON.stringify({ note }),
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1133,7 +1150,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1148,7 +1165,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -1163,7 +1180,7 @@ export const api = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }

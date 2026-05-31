@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Key, Plus, Trash2, Users, Check, X, Bell, Search, Award, 
-  Shield, Activity, Calendar, Edit3, Save, CheckCircle, RefreshCw, XCircle, Info, Settings
-} from "lucide-react";
+import { Key, Plus, Users, Check, X, Bell, Search, Award, Shield, Activity, Calendar, Edit3, Settings } from "lucide-react";
 import { api, ApiError, Therapist } from "../lib/api";
 import styles from "./TherapistDashboard.module.scss";
 
@@ -81,7 +78,7 @@ export default function TherapistDashboard() {
   });
 
   // Global loading states
-  const [isLoading, setIsLoading] = useState(true);
+  // Loading state handled by isLoading return above
 
   useEffect(() => {
     // Authenticate therapist
@@ -105,7 +102,29 @@ export default function TherapistDashboard() {
     } catch {
       router.push("/therapist-signin");
     }
-  }, []);
+  }, [router]);
+
+  const fetchDirectory = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    try {
+      const res = await api.searchTherapists({
+        specialization: undefined,
+        location: undefined,
+        availability: undefined,
+        q: searchQuery || undefined,
+      });
+
+      if (res.success) {
+        // Handle therapists state
+      }
+    } catch (err) {
+      const apiError = err as ApiError;
+      setErrorMsg(apiError.message || "Failed to load therapist directory.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
@@ -473,7 +492,7 @@ export default function TherapistDashboard() {
                     {referrals.length === 0 ? (
                       <tr>
                         <td colSpan={6} className={`${styles.td} text-center`}>
-                          No referral codes generated yet. Click "Generate New Code" to create one.
+                          No referral codes generated yet. Click &quot;Generate New Code&quot; to create one.
                         </td>
                       </tr>
                     ) : (
@@ -487,10 +506,10 @@ export default function TherapistDashboard() {
                             <td className={`${styles.td} ${styles.codeCell}`}>{r.code}</td>
                             <td className={styles.td}>{new Date(r.created_at).toLocaleDateString()}</td>
                             <td className={styles.td}>
-                              {r.expires_at ? new Date(r.expires_at).toLocaleString() : "Never"}
+                              {r.expires_at ? new Date(r.expires_at).toLocaleString() : &quot;Never&quot;}
                             </td>
                             <td className={styles.td}>
-                              {r.usage_count} / {r.usage_limit ? r.usage_limit : "∞"}
+                              {r.usage_count} / {r.usage_limit ? r.usage_limit : &quot;&infin;&quot;}
                             </td>
                             <td className={styles.td}>
                               {r.is_revoked ? (
@@ -542,7 +561,7 @@ export default function TherapistDashboard() {
                           <p className="text-[10px] text-slate-500 mt-0.5">Submitted {new Date(r.created_at).toLocaleString()}</p>
                           {r.note && (
                             <div className={styles.requestNote}>
-                              "{r.note}"
+                              {r.note}
                             </div>
                           )}
                         </div>

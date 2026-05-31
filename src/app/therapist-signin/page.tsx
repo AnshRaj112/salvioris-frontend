@@ -41,8 +41,11 @@ export default function TherapistSigninPage() {
       if (response.success) {
         // Store therapist data in localStorage
         localStorage.setItem("therapist", JSON.stringify(response.user));
-        // Redirect to dashboard or home
-        router.push("/");
+        if (response.token) {
+          localStorage.setItem("session_token", response.token);
+        }
+        // Redirect to dashboard
+        router.push("/therapist-dashboard");
       }
     } catch (err) {
       const apiError = err as ApiError;
