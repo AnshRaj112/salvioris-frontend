@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Key, Plus, Users, Check, X, Bell, Search, Award, Shield, Activity, Calendar, Edit3, Settings, CheckCircle, XCircle, Save } from "lucide-react";
+import { Key, Plus, Users, Check, X, Bell, Search, Award, Shield, Activity, Calendar, Edit3, Settings, CheckCircle, XCircle, Save, UserPlus, Mail } from "lucide-react";
 import { api, ApiError, Therapist } from "../lib/api";
 import styles from "./TherapistDashboard.module.scss";
 
@@ -46,6 +46,16 @@ interface Notification {
   created_at: string;
 }
 
+interface OnboardedPatient {
+  id: string;
+  user_id: string;
+  patient_name: string;
+  patient_email: string;
+  username: string;
+  referral_code: string;
+  onboarded_at: string;
+}
+
 export default function TherapistDashboard() {
   const router = useRouter();
   const [therapist, setTherapist] = useState<Therapist | null>(null);
@@ -58,12 +68,15 @@ export default function TherapistDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<ConnectionRequest[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [onboardedPatients, setOnboardedPatients] = useState<OnboardedPatient[]>([]);
   
   // Modals & Forms
   const [showGenModal, setShowGenModal] = useState(false);
   const [usageLimit, setUsageLimit] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<string>("");
   const [isSubmittingCode, setIsSubmittingCode] = useState(false);
+  const [isOnboardingPatient, setIsOnboardingPatient] = useState(false);
+  const [onboardForm, setOnboardForm] = useState({ patient_name: "", patient_email: "" });
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -107,32 +120,70 @@ export default function TherapistDashboard() {
   const loadDashboardData = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    try {
-      // 1. Referral Codes list
-      const refRes = await api.getReferralCodes();
-      if (refRes.success) setReferrals(refRes.codes || []);
 
-      // 2. Analytics aggregates
-      const analyticsRes = await api.getReferralAnalytics();
-      if (analyticsRes.success) setAnalytics(analyticsRes.analytics);
+    const results = await Promise.allSettled([
+      api.getReferralCodes(),
+      api.getReferralAnalytics(),
+      api.getConnectedUsers(),
+      api.getPendingConnectionRequests(),
+      api.getNotifications(),
+      api.getOnboardedPatients(),
+    ]);
 
-      // 3. Active Patient Connections
-      const connRes = await api.getConnectedUsers();
-      if (connRes.success) setConnections(connRes.connections || []);
+    const failures: string[] = [];
 
-      // 4. Pending Direct Requests
-      const reqRes = await api.getPendingConnectionRequests();
-      if (reqRes.success) setRequests(reqRes.requests || []);
+    const [refRes, analyticsRes, connRes, reqRes, notifRes, onboardRes] = results;
 
-      // 5. In-App Notifications
-      const notifRes = await api.getNotifications();
-      if (notifRes.success) setNotifications(notifRes.notifications || []);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setErrorMsg(apiError.message || "Failed to load dashboard data.");
-    } finally {
-      setIsLoading(false);
+    if (refRes.status === "fulfilled" && refRes.value.success) {
+      setReferrals(refRes.value.codes || []);
+    } else if (refRes.status === "rejected") {
+      failures.push("referral codes");
     }
+
+    if (analyticsRes.status === "fulfilled" && analyticsRes.value.success) {
+      setAnalytics(analyticsRes.value.analytics);
+    } else if (analyticsRes.status === "rejected") {
+      failures.push("analytics");
+    }
+
+    if (connRes.status === "fulfilled" && connRes.value.success) {
+      setConnections(connRes.value.connections || []);
+    } else if (connRes.status === "rejected") {
+      failures.push("connections");
+    }
+
+    if (reqRes.status === "fulfilled" && reqRes.value.success) {
+      setRequests(reqRes.value.requests || []);
+    } else if (reqRes.status === "rejected") {
+      failures.push("connection requests");
+    }
+
+    if (notifRes.status === "fulfilled" && notifRes.value.success) {
+      setNotifications(notifRes.value.notifications || []);
+    } else if (notifRes.status === "rejected") {
+      failures.push("notifications");
+    }
+
+    if (onboardRes.status === "fulfilled" && onboardRes.value.success) {
+      setOnboardedPatients(onboardRes.value.patients || []);
+    } else if (onboardRes.status === "rejected") {
+      failures.push("onboarded patients");
+    }
+
+    if (failures.length === results.length) {
+      const firstError = results.find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
+      const apiError = firstError?.reason as ApiError | undefined;
+      const message = apiError?.message || "Failed to fetch";
+      setErrorMsg(
+        message === "Failed to fetch"
+          ? "Cannot reach the backend API. Make sure the Serenify backend is running on port 8080 (not Apache or another service)."
+          : message
+      );
+    } else if (failures.length > 0) {
+      setErrorMsg(`Some dashboard sections failed to load: ${failures.join(", ")}.`);
+    }
+
+    setIsLoading(false);
   };
 
   const handleCreateCode = async (e: React.FormEvent) => {
@@ -191,6 +242,30 @@ export default function TherapistDashboard() {
     } catch (err) {
       const apiError = err as ApiError;
       setErrorMsg(apiError.message || "Failed to respond to connection request.");
+    }
+  };
+
+  const handleOnboardPatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsOnboardingPatient(true);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await api.onboardPatient({
+        patient_name: onboardForm.patient_name.trim(),
+        patient_email: onboardForm.patient_email.trim(),
+      });
+      if (res.success) {
+        setSuccessMsg(`Patient ${onboardForm.patient_name} onboarded. Login credentials have been emailed.`);
+        setOnboardForm({ patient_name: "", patient_email: "" });
+        loadDashboardData();
+      }
+    } catch (err) {
+      const apiError = err as ApiError;
+      setErrorMsg(apiError.message || "Failed to onboard patient.");
+    } finally {
+      setIsOnboardingPatient(false);
     }
   };
 
@@ -523,6 +598,78 @@ export default function TherapistDashboard() {
           {/* TAB 2: ACTIVE CLIENT ROSTER & REQUESTS */}
           {activeTab === "clients" && (
             <div className="flex flex-col gap-6">
+
+              {/* Patient Onboarding */}
+              <div className={styles.onboardingContainer}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <h2 className={styles.sectionTitle}>Onboard Current Patients</h2>
+                    <p className={styles.sectionSubtitle}>
+                      Create accounts for existing patients. They will receive an email with their username and temporary password.
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleOnboardPatient} className={styles.onboardingForm}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Patient Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Ansh Raj"
+                      value={onboardForm.patient_name}
+                      onChange={(e) => setOnboardForm({ ...onboardForm, patient_name: e.target.value })}
+                      className={styles.formInput}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Patient Email</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="patient@email.com"
+                      value={onboardForm.patient_email}
+                      onChange={(e) => setOnboardForm({ ...onboardForm, patient_email: e.target.value })}
+                      className={styles.formInput}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isOnboardingPatient}
+                    className={styles.primaryButton}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {isOnboardingPatient ? "Onboarding..." : "Onboard Patient"}
+                  </button>
+                </form>
+
+                {onboardedPatients.length > 0 && (
+                  <div className={styles.onboardingList}>
+                    <h3 className="text-sm font-bold flex items-center gap-1.5" style={{ color: '#6B4C93' }}>
+                      <Mail className="h-4 w-4" /> Onboarded Patients ({onboardedPatients.length})
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {onboardedPatients.map((p) => (
+                        <div key={p.id} className={styles.onboardingCard}>
+                          <div>
+                            <h4 className="text-xs font-bold" style={{ color: '#3b2055' }}>{p.patient_name}</h4>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{p.patient_email}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                              Username: <strong>{p.username}</strong> · Referral: <strong>{p.referral_code}</strong>
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Onboarded {new Date(p.onboarded_at).toLocaleString()}
+                            </p>
+                          </div>
+                          <span className={`${styles.rosterTypeBadge} ${styles.onboarded}`}>onboarded</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               {/* Connection Requests Segment */}
               {requests.length > 0 && (

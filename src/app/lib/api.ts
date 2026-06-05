@@ -1059,6 +1059,45 @@ export const api = {
     return data;
   },
 
+  onboardPatient: async (data: { patient_name: string; patient_email: string }) => {
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}/api/therapist/onboard-patient`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(data),
+      });
+    } catch {
+      throw {
+        message: 'Cannot reach the backend API. Make sure the Serenify backend is running on port 8080.',
+        status: 0,
+      } as ApiError;
+    }
+    const resData = await parseResponse(response);
+    if (!response.ok) {
+      throw { message: resData.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return resData;
+  },
+
+  getOnboardedPatients: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/onboarded-patients`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await parseResponse(response);
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
   getTherapistMe: async () => {
     const response = await fetch(`${API_BASE_URL}/api/therapist/me`, {
       method: 'GET',
