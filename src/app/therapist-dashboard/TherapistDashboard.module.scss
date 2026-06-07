@@ -158,9 +158,11 @@
   }
 }
 
-.navButton {
+.navButton,
+a.navButton {
   width: 100%;
   text-align: left;
+  text-decoration: none;
   padding: 0.875rem 1.25rem;
   border-radius: 0.75rem;
   font-size: 0.875rem;

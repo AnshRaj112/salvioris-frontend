@@ -45,7 +45,7 @@ export default function TherapistSigninPage() {
           localStorage.setItem("session_token", response.token);
         }
         // Redirect to dashboard
-        router.push("/therapist-dashboard");
+        router.push("/therapist-dashboard/referrals");
       }
     } catch (err) {
       const apiError = err as ApiError;

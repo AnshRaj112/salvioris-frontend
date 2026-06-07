@@ -1098,6 +1098,21 @@ export const api = {
     return data;
   },
 
+  removeOnboardedPatient: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/onboarded-patients/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await parseResponse(response);
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
   getTherapistMe: async () => {
     const response = await fetch(`${API_BASE_URL}/api/therapist/me`, {
       method: 'GET',
