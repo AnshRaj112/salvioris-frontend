@@ -10,6 +10,7 @@ import { ArrowRight, Shield, Users, Sparkles, LogIn, Eye, EyeOff } from "lucide-
 import Image from "next/image";
 import salviorisLogo from "../../assets/salvioris.jpg";
 import { api, ApiError } from "../lib/api";
+import { storePatientAuth } from "../lib/auth/patient";
 import { storeUserColor } from "../lib/userColor";
 import styles from "./Signin.module.scss";
 
@@ -42,18 +43,10 @@ export default function SigninClient() {
       if (response.success) {
         // Store user data in localStorage
         const userData = response.user as { id?: string; username?: string; [key: string]: unknown } | undefined;
-        if (userData) {
-          localStorage.setItem("user", JSON.stringify(userData));
-          
-          // Generate and store user color
-          if (userData.id) {
-            storeUserColor(userData.id);
-          }
-        }
-        
-        // Store session token if provided
-        if (response.session_token || response.token) {
-          localStorage.setItem("session_token", response.session_token || response.token || "");
+        const token = response.session_token || response.token || "";
+        if (userData?.id && userData.username && token) {
+          storePatientAuth({ id: userData.id, username: userData.username }, token);
+          storeUserColor(userData.id);
         }
         router.push("/home");
       }

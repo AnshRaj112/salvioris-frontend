@@ -189,6 +189,18 @@ export default function HomePage() {
             </Button>
           </div>
 
+          <div className={styles.journalCard}>
+            <div className={styles.cardTitle}>My Care Dashboard</div>
+            <div className={styles.cardText}>
+              Track wellness, complete tasks, view prescriptions, and message your therapist.
+            </div>
+            <Button asChild variant="healing">
+              <Link href={user?.id ? "/patient-dashboard" : "/signin?redirect=/patient-dashboard"}>
+                Open My Care
+              </Link>
+            </Button>
+          </div>
+
           <div className={styles.communityCard}>
             <div className={styles.cardTitle}>Community spaces</div>
             <div className={styles.cardText}>

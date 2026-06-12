@@ -706,3 +706,60 @@ a.navButton {
   background: #10b981;
   border-radius: 50%;
 }
+
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(107, 76, 147, 0.12);
+  border-radius: 0.75rem;
+}
+
+.input, .textarea {
+  @extend .formInput;
+}
+
+.textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.actionButton {
+  @extend .primaryButton;
+}
+
+.clientCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(107, 76, 147, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: rgba(107, 76, 147, 0.35);
+  }
+}
+
+.noteCard {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(107, 76, 147, 0.1);
+  background: rgba(245, 230, 255, 0.3);
+}
+
+.smallButton {
+  font-size: 0.625rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(107, 76, 147, 0.3);
+  background: #fff;
+  color: #6B4C93;
+  cursor: pointer;
+}

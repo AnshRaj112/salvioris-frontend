@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Key, Users, Settings, Shield, Bell, UserPlus } from "lucide-react";
+import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stethoscope, Receipt, ClipboardList, MessageCircle } from "lucide-react";
+import { clearTherapistAuth } from "../lib/auth/tenant";
 import { api, Therapist } from "../lib/api";
 import { Notification } from "./types";
 import styles from "./TherapistDashboard.module.scss";
 
 const NAV = [
+  { href: "/therapist-dashboard/patients", label: "Patients", icon: Stethoscope },
+  { href: "/therapist-dashboard/appointments", label: "Appointments", icon: Calendar },
+  { href: "/therapist-dashboard/messages", label: "Messages", icon: MessageCircle },
+  { href: "/therapist-dashboard/billing", label: "Billing", icon: Receipt },
+  { href: "/therapist-dashboard/reception", label: "Reception", icon: ClipboardList },
+  { href: "/therapist-dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/therapist-dashboard/referrals", label: "Referrals", icon: Key },
   { href: "/therapist-dashboard/clients", label: "Connected Clients", icon: Users, badgeKey: "requests" as const },
   { href: "/therapist-dashboard/onboarding", label: "Onboard Patients", icon: UserPlus },
@@ -38,8 +45,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("therapist");
-    localStorage.removeItem("session_token");
+    clearTherapistAuth();
     router.push("/therapist-signin");
   };
 

@@ -57,6 +57,17 @@ export default function ReferralsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this referral code permanently? This action cannot be undone.")) return;
+    try {
+      await api.deleteReferralCode(id);
+      setSuccessMsg('Referral code deleted.');
+      load();
+    } catch (err) {
+      setErrorMsg((err as ApiError).message || "Failed to delete.");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <AlertMessages error={errorMsg} success={successMsg} />
@@ -124,6 +135,7 @@ export default function ReferralsPage() {
                   </td>
                   <td className={`${styles.td} text-right`}>
                     {!r.is_revoked && <button onClick={() => handleRevoke(r.id)} className={styles.actionLink}>Revoke</button>}
+                    {r.is_revoked && <button onClick={() => handleDelete(r.id)} className={styles.actionLink}>Delete</button>}
                   </td>
                 </tr>
               );
