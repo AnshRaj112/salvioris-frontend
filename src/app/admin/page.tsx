@@ -143,6 +143,7 @@ export default function AdminDashboard() {
   const [deletingFeedbackId, setDeletingFeedbackId] = useState<string | null>(null);
   const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deletingTherapistId, setDeletingTherapistId] = useState<string | null>(null);
   const [adminGroups, setAdminGroups] = useState<AdminGroup[]>([]);
   const [adminGroupsLoading, setAdminGroupsLoading] = useState(false);
   const [adminGroupMembers, setAdminGroupMembers] = useState<AdminGroupMember[]>([]);
@@ -603,6 +604,33 @@ export default function AdminDashboard() {
           }
         } catch (error) {
           handleAdminApiError(error, "Failed to reject therapist.");
+        }
+      },
+    });
+  };
+
+  const handleDeleteTherapist = async (therapist: Therapist) => {
+    setConfirmState({
+      open: true,
+      title: "Delete therapist",
+      message: `Delete therapist "${therapist.name}"? This removes their account, onboarded patient links, tenant records, appointments, tasks, billing, messages, and related dashboard data. This action cannot be undone.`,
+      confirmText: "Delete",
+      confirmVariant: "destructive",
+      onConfirm: async () => {
+        setDeletingTherapistId(therapist.id);
+        try {
+          const data = await api.deleteTherapist(therapist.id);
+          if (data.success) {
+            setNotice({ title: "Deleted", message: "Therapist deleted." });
+            fetchTherapists();
+            setSelectedTherapist((current) => (current?.id === therapist.id ? null : current));
+          } else {
+            setNotice({ title: "Error", message: data.message || "Failed to delete therapist." });
+          }
+        } catch (error) {
+          handleAdminApiError(error, "Failed to delete therapist.");
+        } finally {
+          setDeletingTherapistId(null);
         }
       },
     });
@@ -1616,6 +1644,17 @@ export default function AdminDashboard() {
                         </Button>
                       </>
                     )}
+                    {activeTab === "approved" && (
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteTherapist(therapist)}
+                        className={styles.rejectButton}
+                        disabled={deletingTherapistId === therapist.id}
+                      >
+                        <Trash2 className={styles.buttonIcon} />
+                        {deletingTherapistId === therapist.id ? "Deleting..." : "Delete"}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1730,8 +1769,9 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {!selectedTherapist.is_approved && (
-                <div className={styles.modalActions}>
+              <div className={styles.modalActions}>
+                {!selectedTherapist.is_approved && (
+                  <>
                   <Button
                     variant="default"
                     onClick={() => {
@@ -1754,8 +1794,20 @@ export default function AdminDashboard() {
                     <XCircle className={styles.buttonIcon} />
                     Reject Application
                   </Button>
-                </div>
-              )}
+                  </>
+                )}
+                {selectedTherapist.is_approved && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleDeleteTherapist(selectedTherapist)}
+                    className={styles.rejectButton}
+                    disabled={deletingTherapistId === selectedTherapist.id}
+                  >
+                    <Trash2 className={styles.buttonIcon} />
+                    {deletingTherapistId === selectedTherapist.id ? "Deleting..." : "Delete Therapist"}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>

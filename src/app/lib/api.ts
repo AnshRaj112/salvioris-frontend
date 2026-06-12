@@ -485,6 +485,18 @@ export const api = {
     return data;
   },
 
+  deleteTherapist: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/therapists?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
   getAdminGroups: async (limit?: number, skip?: number, search?: string, tag?: string) => {
     const params = new URLSearchParams();
     if (limit != null) params.append("limit", String(limit));
@@ -970,6 +982,21 @@ export const api = {
   revokeReferralCode: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/api/therapist/referrals/${encodeURIComponent(id)}/revoke`, {
       method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await parseResponse(response);
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  deleteReferralCode: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/therapist/referrals/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeaders(),
@@ -1729,4 +1756,3 @@ export const chatApi = {
     };
   },
 };
-

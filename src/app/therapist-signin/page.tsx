@@ -10,6 +10,7 @@ import { ArrowRight, Shield, Users, Award, LogIn, Eye, EyeOff } from "lucide-rea
 import Image from "next/image";
 import salviorisLogo from "../../assets/salvioris.jpg";
 import { api, ApiError } from "../lib/api";
+import { storeTherapistAuth } from "../lib/auth/tenant";
 import styles from "./TherapistSignin.module.scss";
 
 export default function TherapistSigninPage() {
@@ -37,15 +38,21 @@ export default function TherapistSigninPage() {
     setError(null);
 
     try {
-      const response = await api.therapistSignin(formData);
-      if (response.success) {
-        // Store therapist data in localStorage
-        localStorage.setItem("therapist", JSON.stringify(response.user));
-        if (response.token) {
-          localStorage.setItem("session_token", response.token);
-        }
-        // Redirect to dashboard
-        router.push("/therapist-dashboard/referrals");
+      const response = await api.therapistSignin(formData) as {
+        success: boolean;
+        user?: Record<string, unknown>;
+        token?: string;
+        access_token?: string;
+        refresh_token?: string;
+      };
+      if (response.success && response.user) {
+        storeTherapistAuth(
+          response.user,
+          response.token,
+          response.access_token,
+          response.refresh_token
+        );
+        router.push("/therapist-dashboard/patients");
       }
     } catch (err) {
       const apiError = err as ApiError;
