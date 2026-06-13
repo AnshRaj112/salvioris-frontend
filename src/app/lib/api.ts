@@ -486,11 +486,11 @@ export const api = {
   },
 
   deleteTherapist: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/api/admin/therapists?id=${encodeURIComponent(id)}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/therapists/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: { ...getAdminAuthHeaders() },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
@@ -702,7 +702,7 @@ export const api = {
       method: 'DELETE',
       headers: { ...getAdminAuthHeaders() },
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
       throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
     }
