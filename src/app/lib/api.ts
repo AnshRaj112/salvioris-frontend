@@ -116,6 +116,8 @@ export interface Therapist {
   certificate_image_path?: string;
   degree_image_path?: string;
   is_approved: boolean;
+  session_fee_chat?: number;
+  session_fee_in_person?: number;
 }
 
 export interface TherapistStatusResponse {
@@ -1155,7 +1157,7 @@ export const api = {
     return data;
   },
 
-  updateTherapistProfile: async (data: { specialization: string; phone: string; years_of_experience: number; dsm_awareness: string; therapy_types: string }) => {
+  updateTherapistProfile: async (data: { specialization: string; phone: string; years_of_experience: number; dsm_awareness: string; therapy_types: string; session_fee_chat?: number; session_fee_in_person?: number }) => {
     const response = await fetch(`${API_BASE_URL}/api/therapist/profile`, {
       method: 'PUT',
       headers: {

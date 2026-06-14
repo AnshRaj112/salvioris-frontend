@@ -62,6 +62,17 @@ export interface V2Appointment {
   meeting_link?: string;
 }
 
+export interface V2AvailabilitySlot {
+  id: string;
+  tenant_id: string;
+  therapist_id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  slot_duration_min: number;
+  is_active: boolean;
+}
+
 export interface AnalyticsOverview {
   active_patients: number;
   sessions_completed_month: number;
@@ -242,6 +253,20 @@ export const tenantApi = {
     const s = q.toString() ? `?${q}` : "";
     return tenantFetch<{ data: WellnessEntry[] }>(`/patients/${patientId}/wellness${s}`);
   },
+
+  listAvailability: () =>
+    tenantFetch<{ data: V2AvailabilitySlot[] }>("/availability"),
+
+  createAvailability: (body: { day_of_week: number; start_time: string; end_time: string; slot_duration_min?: number }) =>
+    tenantFetch<{ data: V2AvailabilitySlot }>("/availability", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  deleteAvailability: (slotId: string) =>
+    tenantFetch<void>(`/availability/${slotId}`, {
+      method: "DELETE",
+    }),
 };
 
 export interface BillingProfile {
@@ -251,6 +276,10 @@ export interface BillingProfile {
   invoice_prefix: string;
   currency: string;
   gst_number?: string;
+  session_fee_in_person: number;
+  session_fee_chat: number;
+  session_fee_voice: number;
+  session_fee_video: number;
 }
 
 export interface TenantInvoice {

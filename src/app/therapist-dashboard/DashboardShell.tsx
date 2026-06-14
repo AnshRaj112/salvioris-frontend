@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stethoscope, Receipt, ClipboardList, MessageCircle } from "lucide-react";
+import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stethoscope, Receipt, ClipboardList, MessageCircle, Clock } from "lucide-react";
 import { clearTherapistAuth } from "../lib/auth/tenant";
 import { api, Therapist } from "../lib/api";
 import { Notification } from "./types";
@@ -12,6 +12,7 @@ import styles from "./TherapistDashboard.module.scss";
 const NAV = [
   { href: "/therapist-dashboard/patients", label: "Patients", icon: Stethoscope },
   { href: "/therapist-dashboard/appointments", label: "Appointments", icon: Calendar },
+  { href: "/therapist-dashboard/availability", label: "Working Hours", icon: Clock },
   { href: "/therapist-dashboard/messages", label: "Messages", icon: MessageCircle },
   { href: "/therapist-dashboard/billing", label: "Billing", icon: Receipt },
   { href: "/therapist-dashboard/reception", label: "Reception", icon: ClipboardList },

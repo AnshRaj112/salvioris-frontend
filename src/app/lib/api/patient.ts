@@ -143,6 +143,41 @@ export const patientApi = {
       body: JSON.stringify(body),
     }),
 
+  getTherapistAvailability: (therapistId: string, date?: string) => {
+    const s = date ? `?date=${date}` : "";
+    return patientFetch<{ data: Array<{ start: string; end: string }> }>(`/therapists/${therapistId}/availability${s}`);
+  },
+
+  initiateBooking: (body: {
+    therapist_id: string;
+    type: string;
+    starts_at: string;
+    notes?: string;
+  }) =>
+    patientFetch<{
+      order_id: string;
+      amount: number;
+      currency: string;
+      key_id: string;
+      invoice_id: string;
+      appointment_id: string;
+    }>("/booking/initiate", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  verifyBookingPayment: (body: {
+    invoice_id: string;
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+    appointment_id: string;
+  }) =>
+    patientFetch<{ success: boolean }>("/booking/verify", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
   listJournals: () => patientFetch<{ data: PatientJournal[] }>("/journals"),
 
   createJournal: (body: { title?: string; content: string; mood?: number }) =>

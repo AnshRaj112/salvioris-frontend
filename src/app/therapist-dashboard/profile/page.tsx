@@ -9,28 +9,64 @@ import styles from "../TherapistDashboard.module.scss";
 export default function ProfilePage() {
   const [therapist, setTherapist] = useState<Therapist | null>(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ specialization: "", phone: "", years_of_experience: 0, dsm_awareness: "", therapy_types: "" });
+  const [form, setForm] = useState({ 
+    specialization: "", 
+    phone: "", 
+    years_of_experience: 0, 
+    dsm_awareness: "", 
+    therapy_types: "",
+    session_fee_chat: 0,
+    session_fee_in_person: 0
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("therapist");
-    if (stored) {
-      const t = JSON.parse(stored) as Therapist;
-      setTherapist(t);
-      setForm({
-        specialization: t.specialization || "",
-        phone: t.phone || "",
-        years_of_experience: t.years_of_experience || 0,
-        dsm_awareness: t.dsm_awareness || "",
-        therapy_types: t.therapy_types || "",
-      });
-    }
+    const loadProfileData = async () => {
+      try {
+        const res = await api.getTherapistMe();
+        if (res.success && res.user) {
+          const t = res.user as Therapist;
+          localStorage.setItem("therapist", JSON.stringify(t));
+          setTherapist(t);
+          setForm({
+            specialization: t.specialization || "",
+            phone: t.phone || "",
+            years_of_experience: t.years_of_experience || 0,
+            dsm_awareness: t.dsm_awareness || "",
+            therapy_types: t.therapy_types || "",
+            session_fee_chat: t.session_fee_chat || 0,
+            session_fee_in_person: t.session_fee_in_person || 0,
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to load fresh profile data:", err);
+      }
+
+      const stored = localStorage.getItem("therapist");
+      if (stored) {
+        const t = JSON.parse(stored) as Therapist;
+        setTherapist(t);
+        setForm({
+          specialization: t.specialization || "",
+          phone: t.phone || "",
+          years_of_experience: t.years_of_experience || 0,
+          dsm_awareness: t.dsm_awareness || "",
+          therapy_types: t.therapy_types || "",
+          session_fee_chat: t.session_fee_chat || 0,
+          session_fee_in_person: t.session_fee_in_person || 0,
+        });
+      }
+    };
+
+    loadProfileData();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setSuccessMsg(null);
     try {
       const res = await api.updateTherapistProfile(form);
       if (res.success && therapist) {
@@ -38,10 +74,10 @@ export default function ProfilePage() {
         localStorage.setItem("therapist", JSON.stringify(updated));
         setTherapist(updated);
         setEditing(false);
-        setSuccessMsg("Profile updated.");
+        setSuccessMsg("Profile updated successfully.");
       }
     } catch (err) {
-      setErrorMsg((err as ApiError).message || "Failed to update.");
+      setErrorMsg((err as ApiError).message || "Failed to update profile.");
     }
   };
 
@@ -75,6 +111,17 @@ export default function ProfilePage() {
             <option value="basic">Basic</option>
           </select>
         </div>
+        
+        {/* Session type consultancy fees */}
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Online Consultancy (Chat) Fee (INR)</label>
+          <input type="number" step="0.01" min="0" value={form.session_fee_chat} onChange={(e) => setForm({ ...form, session_fee_chat: parseFloat(e.target.value) || 0 })} disabled={!editing} className={styles.formInput} />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Offline Consultancy (In-Person) Fee (INR)</label>
+          <input type="number" step="0.01" min="0" value={form.session_fee_in_person} onChange={(e) => setForm({ ...form, session_fee_in_person: parseFloat(e.target.value) || 0 })} disabled={!editing} className={styles.formInput} />
+        </div>
+
         <div className="md:col-span-2">
           <label className={styles.formLabel}>Therapy Focus Areas</label>
           <textarea rows={3} value={form.therapy_types} onChange={(e) => setForm({ ...form, therapy_types: e.target.value })} disabled={!editing} className={styles.formInput} style={{ fontFamily: "inherit", resize: "vertical" }} />
