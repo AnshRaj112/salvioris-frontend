@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Filter, Award, Shield, MapPin, Calendar, ArrowRight, Activity, ChevronRight, Inbox } from "lucide-react";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, getMe } from "../lib/api";
+import { clearPatientAuth } from "../lib/auth/patient";
 import styles from "./TherapistsSearch.module.scss";
 
 interface TherapistItem {
@@ -21,6 +23,8 @@ interface TherapistItem {
 }
 
 export default function TherapistSearchDirectory() {
+  const router = useRouter();
+  const [isAuthed, setIsAuthed] = useState(false);
   const [therapists, setTherapists] = useState<TherapistItem[]>([]);
   const [specialization, setSpecialization] = useState("");
   const [location, setLocation] = useState("");
@@ -29,6 +33,24 @@ export default function TherapistSearchDirectory() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem("session_token");
+    if (!token) {
+      router.replace("/signin?redirect=/therapists");
+      return;
+    }
+    getMe()
+      .then((me) => {
+        if (!me) {
+          clearPatientAuth();
+          router.replace("/signin?redirect=/therapists");
+          return;
+        }
+        setIsAuthed(true);
+      });
+  }, [router]);
 
   const fetchDirectory = useCallback(async () => {
     setIsLoading(true);
@@ -46,20 +68,28 @@ export default function TherapistSearchDirectory() {
       }
     } catch (err) {
       const apiError = err as ApiError;
+      if (apiError.status === 401) {
+        clearPatientAuth();
+        router.replace("/signin?redirect=/therapists");
+        return;
+      }
       setErrorMsg(apiError.message || "Failed to load therapist directory.");
     } finally {
       setIsLoading(false);
     }
-  }, [specialization, location, availability, searchQuery]);
+  }, [specialization, location, availability, searchQuery, router]);
 
   useEffect(() => {
+    if (!isAuthed) return;
     fetchDirectory();
-  }, [fetchDirectory]);
+  }, [isAuthed, fetchDirectory]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchDirectory();
   };
+
+  if (!isAuthed) return null;
 
   return (
     <div className={styles.searchPage}>

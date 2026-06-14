@@ -210,6 +210,18 @@ export default function HomePage() {
               <Link href="/community">Join Community</Link>
             </Button>
           </div>
+
+          <div className={styles.journalCard}>
+            <div className={styles.cardTitle}>Find a Therapist</div>
+            <div className={styles.cardText}>
+              Search certified, onboarded therapists and request a connection.
+            </div>
+            <Button asChild variant="healing">
+              <Link href={user?.id ? "/therapists" : "/signup?redirect=/therapists"}>
+                Search Therapists
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className={styles.journalsSection}>

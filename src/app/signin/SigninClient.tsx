@@ -41,14 +41,16 @@ export default function SigninClient() {
     try {
       const response = await api.privacySignin(formData);
       if (response.success) {
-        // Store user data in localStorage
         const userData = response.user as { id?: string; username?: string; [key: string]: unknown } | undefined;
         const token = response.session_token || response.token || "";
-        if (userData?.id && userData.username && token) {
-          storePatientAuth({ id: userData.id, username: userData.username }, token);
-          storeUserColor(userData.id);
+        if (!userData?.id || !userData.username || !token) {
+          setError("Sign-in succeeded but no session was created. Please try again.");
+          return;
         }
-        router.push("/home");
+        storePatientAuth({ id: userData.id, username: userData.username }, token);
+        storeUserColor(userData.id);
+        const params = new URLSearchParams(window.location.search);
+        router.push(params.get("redirect") || "/home");
       }
     } catch (err) {
       const apiError = err as ApiError;
