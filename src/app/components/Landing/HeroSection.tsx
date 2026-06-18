@@ -18,12 +18,19 @@ const HeroSection = () => {
       
       {/* Hero Content */}
       <div className="relative z-10 text-center max-w-4xl mx-auto px-6 animate-fade-in-up">
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-2xl [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
+        <h1 className="text-6xl md:text-8xl font-extrabold text-white mb-2 tracking-wider drop-shadow-2xl [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
+          SALVIORIS
+        </h1>
+        <p className="text-lg md:text-xl font-semibold text-gradient-primary uppercase tracking-widest mb-12 drop-shadow-md">
+          Mental Health & Therapy Management Platform
+        </p>
+        
+        <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-2xl [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
           You&apos;re Not Alone.{" "}
           <span className="text-gradient-primary drop-shadow-none [text-shadow:none]">
             Talk, Heal, Grow.
           </span>
-        </h1>
+        </h2>
         
         <p className="text-xl md:text-2xl text-white mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-lg [text-shadow:_1px_1px_2px_rgb(0_0_0_/_60%)]">
           Begin your journey with compassionate therapists and your own safe space to express.

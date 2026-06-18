@@ -177,6 +177,9 @@ export default function AdminDashboard() {
     message: "",
   });
   const [isConfirmBusy, setIsConfirmBusy] = useState(false);
+  const [modalGSTRate, setModalGSTRate] = useState<number | "">("");
+  const [isUpdatingGST, setIsUpdatingGST] = useState(false);
+  const [isLoadingGST, setIsLoadingGST] = useState(false);
 
   // If any admin API returns 401, clear session and redirect to login
   const handleAdminApiError = (error: unknown, fallbackMessage: string) => {
@@ -234,6 +237,25 @@ export default function AdminDashboard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, isAuthenticated]);
+
+  useEffect(() => {
+    if (selectedTherapist) {
+      setModalGSTRate("");
+      setIsLoadingGST(true);
+      api.getTherapistGST(selectedTherapist.id)
+        .then((res) => {
+          if (res.success && typeof res.gst_rate === "number") {
+            setModalGSTRate(res.gst_rate);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load GST rate for therapist", err);
+        })
+        .finally(() => {
+          setIsLoadingGST(false);
+        });
+    }
+  }, [selectedTherapist]);
 
   const fetchInsights = async () => {
     setInsightsLoading(true);
@@ -1690,6 +1712,55 @@ export default function AdminDashboard() {
                   <div><strong>License State:</strong> {selectedTherapist.license_state}</div>
                   <div><strong>Years of Experience:</strong> {selectedTherapist.years_of_experience}</div>
                   <div><strong>Specialization:</strong> {selectedTherapist.specialization || "N/A"}</div>
+                </div>
+              </div>
+
+              <div className={styles.detailSection}>
+                <h3>GST & Billing Settings</h3>
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center", backgroundColor: "rgba(107, 76, 147, 0.05)", border: "1px solid rgba(107, 76, 147, 0.15)", borderRadius: "0.5rem", padding: "1rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#94a3b8" }}>GST RATE (%)</span>
+                    {isLoadingGST ? (
+                      <span style={{ fontSize: "0.875rem", color: "#64748b" }}>Loading GST rate...</span>
+                    ) : (
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={modalGSTRate}
+                          onChange={(e) => setModalGSTRate(parseFloat(e.target.value) || 0)}
+                          style={{
+                            backgroundColor: "#020617",
+                            border: "1px solid #334155",
+                            borderRadius: "0.25rem",
+                            padding: "0.375rem 0.75rem",
+                            color: "#f8fafc",
+                            width: "100px",
+                            fontSize: "0.875rem"
+                          }}
+                        />
+                        <Button
+                          disabled={isUpdatingGST || modalGSTRate === ""}
+                          onClick={async () => {
+                            if (modalGSTRate === "") return;
+                            setIsUpdatingGST(true);
+                            try {
+                              const res = await api.updateTherapistGST(selectedTherapist.id, modalGSTRate);
+                              if (res.success) {
+                                setNotice({ title: "Success", message: `GST Rate updated successfully to ${modalGSTRate}%` });
+                              }
+                            } catch (err) {
+                              handleAdminApiError(err, "Failed to update GST rate.");
+                            } finally {
+                              setIsUpdatingGST(false);
+                            }
+                          }}
+                        >
+                          {isUpdatingGST ? "Saving..." : "Update Rate"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

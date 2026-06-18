@@ -919,6 +919,33 @@ export const api = {
     return data;
   },
 
+  getTherapistGST: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/therapists/${encodeURIComponent(id)}/gst`, {
+      headers: { ...getAdminAuthHeaders() },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
+  updateTherapistGST: async (id: string, gstRate: number) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/therapists/${encodeURIComponent(id)}/gst`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders(),
+      },
+      body: JSON.stringify({ gst_rate: gstRate }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw { message: data.message || `HTTP error! status: ${response.status}`, status: response.status } as ApiError;
+    }
+    return data;
+  },
+
   // Admin auth routes
   adminSignin: async (data: { username: string; password: string }) => {
     const response = await fetch(`${API_BASE_URL}/api/admin/signin`, {

@@ -123,7 +123,8 @@ export default function TherapistBillingPage() {
             </div>
             <div>
               <label className="text-[10px] text-slate-400 block mb-0.5">GST Rate (%)</label>
-              <input className={styles.input} type="number" step="0.1" value={profileForm.gst_rate} onChange={(e) => setProfileForm({ ...profileForm, gst_rate: parseFloat(e.target.value) || 0 })} required />
+              <input className={styles.input} type="number" step="0.1" value={profileForm.gst_rate} disabled={true} style={{ opacity: 0.6, cursor: "not-allowed" }} />
+              <span className="text-[9px] text-slate-500 block mt-0.5">Controlled by admin</span>
             </div>
             <div className="col-span-2">
               <label className="text-[10px] text-slate-400 block mb-0.5">GST Number (Optional)</label>

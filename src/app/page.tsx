@@ -8,12 +8,12 @@ import FaqSection from "./components/Landing/FaqSection";
 import ContactUs from "./components/Landing/ContactUs";
 
 export const metadata: Metadata = {
-  title: "Home - Your Safe Space for Mental Wellness",
-  description: "Welcome to Salvioris - a privacy-first mental wellness platform. Connect with licensed therapists, express yourself freely, and find support in a safe, judgment-free environment.",
-  keywords: ["mental health", "therapy", "counseling", "wellness", "privacy", "anonymous therapy", "online therapy", "mental wellness platform"],
+  title: "SALVIORIS - Your Safe Space for Mental Wellness",
+  description: "SALVIORIS is a privacy-first mental wellness platform connecting patients with licensed therapists. Connect with therapists, manage your wellness journey, and track mental health metrics.",
+  keywords: ["SALVIORIS", "mental health", "therapy", "counseling", "wellness", "privacy", "anonymous therapy", "online therapy", "mental wellness platform"],
   openGraph: {
-    title: "Salvioris - Your Safe Space for Mental Wellness",
-    description: "Privacy-first mental wellness platform connecting users with licensed therapists.",
+    title: "SALVIORIS - Your Safe Space for Mental Wellness",
+    description: "SALVIORIS is a privacy-first mental wellness platform connecting patients with licensed therapists.",
     type: "website",
   },
 };

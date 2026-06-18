@@ -123,9 +123,9 @@ export default function BookSessionPage() {
     setSuccessMsg(null);
 
     try {
-      // 1. Construct RFC3339 timestamp for selected slot start
-      // selectedSlot.start is in format "10:00:00"
-      const startsAtStr = `${selectedDate}T${selectedSlot.start}Z`;
+      // 1. Construct RFC3339 timestamp for selected slot start in local timezone and convert to UTC ISO string
+      const localDateTimeStr = `${selectedDate}T${selectedSlot.start}`;
+      const startsAtStr = new Date(localDateTimeStr).toISOString();
       
       // 2. Call initiate API
       const bookingData = await patientApi.initiateBooking({
