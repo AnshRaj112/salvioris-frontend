@@ -7,6 +7,7 @@ import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stet
 import { clearTherapistAuth } from "../lib/auth/tenant";
 import { api, Therapist } from "../lib/api";
 import { Notification } from "./types";
+import SessionReminder from "../components/SessionReminder";
 import styles from "./TherapistDashboard.module.scss";
 
 const NAV = [
@@ -123,6 +124,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </div>
         </aside>
       </main>
+      <SessionReminder role="therapist" />
     </div>
   );
 }

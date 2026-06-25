@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MessageCircle } from "lucide-react";
 import { tenantApi, TenantApiError, DMConversation, DMMessage } from "../../lib/api/tenant";
+import { getTenantId, getAuthToken } from "../../lib/auth/tenant";
 import { AlertMessages } from "../Alerts";
 import styles from "../TherapistDashboard.module.scss";
 
@@ -13,16 +14,92 @@ export default function TherapistMessagesPage() {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const wsRef = useRef<WebSocket | null>(null);
+  const activeRef = useRef<DMConversation | null>(null);
+
   const loadConvos = () =>
     tenantApi.listConversations().then((r) => setConvos(r.data || [])).catch((e) => setError((e as TenantApiError).message));
 
-  useEffect(() => { loadConvos(); }, []);
+  useEffect(() => {
+    loadConvos();
+  }, []);
+
+  // Sync active state to ref for WebSocket callbacks
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  // Establish WebSocket connection
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let isComponentActive = true;
+
+    function initWS() {
+      try {
+        const tenantId = getTenantId();
+        const token = getAuthToken();
+        if (!tenantId || !token || !isComponentActive) return;
+
+        const apiHost = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        const wsUrl = apiHost.replace(/^http/, "ws") + `/ws/v1/tenant/${tenantId}/dm?token=${encodeURIComponent(token)}`;
+
+        ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          console.log("Therapist DM WebSocket connected");
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === "message.new") {
+              // Refresh convo list to update previews and unread badges
+              loadConvos();
+
+              // If it belongs to currently active conversation, append it in real-time
+              if (activeRef.current && data.conversation_id === activeRef.current.id) {
+                const newMsg: DMMessage = {
+                  id: data.message_id || Date.now().toString(),
+                  content: data.content,
+                  sender_role: data.sender_role,
+                  created_at: data.timestamp || new Date().toISOString(),
+                };
+                setMessages((prev) => [...prev, newMsg]);
+                tenantApi.markConversationRead(activeRef.current.id).catch(() => {});
+              }
+            }
+          } catch (err) {
+            console.error("Error parsing WebSocket message:", err);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log("Therapist DM WebSocket disconnected");
+          if (isComponentActive) {
+            setTimeout(initWS, 3000);
+          }
+        };
+      } catch (err) {
+        console.error("Failed to initialize therapist DM WebSocket:", err);
+      }
+    }
+
+    initWS();
+
+    return () => {
+      isComponentActive = false;
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, []);
 
   const openConvo = async (c: DMConversation) => {
     setActive(c);
     try {
       const res = await tenantApi.listConversationMessages(c.id);
-      setMessages(res.data || []);
+      setMessages((res.data || []).reverse());
       await tenantApi.markConversationRead(c.id);
       loadConvos();
     } catch (e) {
@@ -34,10 +111,15 @@ export default function TherapistMessagesPage() {
     e.preventDefault();
     if (!active || !text.trim()) return;
     try {
-      await tenantApi.sendConversationMessage(active.id, text.trim());
+      const res = await tenantApi.sendConversationMessage(active.id, text.trim());
       setText("");
-      const res = await tenantApi.listConversationMessages(active.id);
-      setMessages(res.data || []);
+      if (res.data) {
+        setMessages((prev) => [...prev, res.data]);
+      } else {
+        const fetchRes = await tenantApi.listConversationMessages(active.id);
+        setMessages((fetchRes.data || []).reverse());
+      }
+      loadConvos();
     } catch (err) {
       setError((err as TenantApiError).message);
     }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Heart, Calendar, Pill, CheckSquare, MessageCircle, Receipt, Home, LogOut, BookOpen } from "lucide-react";
 import { clearPatientAuth, getPatientUser } from "../lib/auth/patient";
+import SessionReminder from "../components/SessionReminder";
 import styles from "./PatientDashboard.module.scss";
 
 const NAV = [
@@ -58,6 +59,7 @@ export default function PatientShell({ children }: { children: React.ReactNode }
         </aside>
         <section className={styles.workspace}>{children}</section>
       </main>
+      <SessionReminder role="patient" />
     </div>
   );
 }
