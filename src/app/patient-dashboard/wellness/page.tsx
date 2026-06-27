@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { patientApi, PatientApiError, WellnessEntry } from "../../lib/api/patient";
-import { Heart, Calendar, AlertCircle, Sparkles, Smile, MessageSquare, Activity } from "lucide-react";
+import { Heart, Calendar, AlertCircle, Sparkles, Smile, MessageSquare, Activity, ShieldAlert, Monitor, Coffee, Utensils } from "lucide-react";
 
 export default function WellnessPage() {
   const [entries, setEntries] = useState<WellnessEntry[]>([]);
   const [mood, setMood] = useState(5);
   const [anxiety, setAnxiety] = useState(5);
+  const [sleepHours, setSleepHours] = useState(8);
+  const [screenTime, setScreenTime] = useState(4);
+  const [waterIntake, setWaterIntake] = useState(8);
+  const [foodIntake, setFoodIntake] = useState("balanced");
   const [reflection, setReflection] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -30,7 +34,14 @@ export default function WellnessPage() {
     setIsSubmitting(true);
     try {
       await patientApi.logWellness({
-        metrics: { mood, anxiety },
+        metrics: { 
+          mood, 
+          anxiety,
+          sleep_hours: sleepHours,
+          screen_time: screenTime,
+          water_intake: waterIntake,
+          food_intake: foodIntake
+        },
         reflection,
       });
       setSuccess("Your wellness log for today has been saved successfully!");
@@ -63,6 +74,15 @@ export default function WellnessPage() {
     return { emoji: "😱", label: "Severe", color: "text-red-400 font-medium", barColor: "bg-red-500", bg: "bg-red-500/10 border-red-500/20 text-red-300" };
   };
 
+  // Helper for food intake label
+  const getFoodLabel = (val?: string) => {
+    if (val === "balanced") return "Balanced Meals 🥗";
+    if (val === "skipped_meals") return "Skipped Meals 🚫";
+    if (val === "fast_food") return "Fast/Sugary Food 🍕";
+    if (val === "unstructured") return "Unstructured 🍿";
+    return val || "—";
+  };
+
   const moodState = getMoodDetails(mood);
   const anxietyState = getAnxietyDetails(anxiety);
 
@@ -75,7 +95,7 @@ export default function WellnessPage() {
           <h2 className="text-2xl font-bold tracking-tight text-white">Daily Wellness</h2>
         </div>
         <p className="text-sm text-slate-300 leading-relaxed">
-          Take a moment to check in with yourself. Track your mood, monitor anxiety, and jot down reflections to observe your mental wellness trends over time.
+          Take a moment to check in with yourself. Track your mood, monitor anxiety, log physical wellness markers, and reflect on your day.
         </p>
       </div>
 
@@ -98,11 +118,11 @@ export default function WellnessPage() {
             </div>
           )}
 
-          {/* Form Fields Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Form Fields Row (Core Mental Health) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Mood Slider Card */}
-            <div className="flex flex-col gap-4 bg-slate-900/35 border border-slate-800/60 rounded-xl p-5 hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-4 bg-slate-900/35 border border-slate-800/60 rounded-xl p-5 hover:border-slate-850 transition-all">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-semibold text-slate-200">How is your mood?</span>
                 <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${moodState.bg}`}>
@@ -110,7 +130,7 @@ export default function WellnessPage() {
                 </span>
               </div>
               
-              <div className="flex items-center justify-center py-6">
+              <div className="flex items-center justify-center py-4">
                 <div className="text-center">
                   <span className="text-5xl select-none">{moodState.emoji}</span>
                   <div className="text-3xl font-bold mt-2 text-white">{mood} <span className="text-xs text-slate-400">/ 10</span></div>
@@ -135,7 +155,7 @@ export default function WellnessPage() {
             </div>
 
             {/* Anxiety Slider Card */}
-            <div className="flex flex-col gap-4 bg-slate-900/35 border border-slate-800/60 rounded-xl p-5 hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-4 bg-slate-900/35 border border-slate-800/60 rounded-xl p-5 hover:border-slate-850 transition-all">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-semibold text-slate-200">How is your anxiety level?</span>
                 <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${anxietyState.bg}`}>
@@ -143,7 +163,7 @@ export default function WellnessPage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-center py-6">
+              <div className="flex items-center justify-center py-4">
                 <div className="text-center">
                   <span className="text-5xl select-none">{anxietyState.emoji}</span>
                   <div className="text-3xl font-bold mt-2 text-white">{anxiety} <span className="text-xs text-slate-400">/ 10</span></div>
@@ -169,15 +189,124 @@ export default function WellnessPage() {
 
           </div>
 
+          {/* Form Fields Row (Extended Habits Metrics) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-800/80 pt-6">
+            
+            {/* Sleep Hours Slider */}
+            <div className="flex flex-col gap-3 bg-slate-900/25 border border-slate-800/40 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Coffee className="h-4 w-4 text-sky-400" />
+                  Sleep Duration
+                </span>
+                <span className="text-xs font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+                  {sleepHours} hrs
+                </span>
+              </div>
+              <input 
+                type="range" 
+                min={0} 
+                max={24} 
+                step={0.5}
+                value={sleepHours} 
+                onChange={(e) => setSleepHours(Number(e.target.value))}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+              />
+              <div className="flex justify-between text-[9px] text-slate-500">
+                <span>0 hrs (No sleep)</span>
+                <span>8 hrs (Ideal)</span>
+                <span>24 hrs</span>
+              </div>
+            </div>
+
+            {/* Screen Time Slider */}
+            <div className="flex flex-col gap-3 bg-slate-900/25 border border-slate-800/40 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Monitor className="h-4 w-4 text-violet-400" />
+                  Screen Time
+                </span>
+                <span className="text-xs font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
+                  {screenTime} hrs
+                </span>
+              </div>
+              <input 
+                type="range" 
+                min={0} 
+                max={24} 
+                step={0.5}
+                value={screenTime} 
+                onChange={(e) => setScreenTime(Number(e.target.value))}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
+              />
+              <div className="flex justify-between text-[9px] text-slate-500">
+                <span>0 hrs</span>
+                <span>4 hrs</span>
+                <span>24 hrs (Full day)</span>
+              </div>
+            </div>
+
+            {/* Water Intake Slider */}
+            <div className="flex flex-col gap-3 bg-slate-900/25 border border-slate-800/40 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Coffee className="h-4 w-4 text-blue-400" />
+                  Water Intake
+                </span>
+                <span className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                  {waterIntake} cups
+                </span>
+              </div>
+              <input 
+                type="range" 
+                min={0} 
+                max={20} 
+                step={1}
+                value={waterIntake} 
+                onChange={(e) => setWaterIntake(Number(e.target.value))}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+              <div className="flex justify-between text-[9px] text-slate-500">
+                <span>0 cups</span>
+                <span>8 cups (Target)</span>
+                <span>20 cups</span>
+              </div>
+            </div>
+
+            {/* Food Intake Select */}
+            <div className="flex flex-col gap-3 bg-slate-900/25 border border-slate-800/40 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Utensils className="h-4 w-4 text-amber-400" />
+                  Food Intake
+                </span>
+                <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20">
+                  {foodIntake === "balanced" ? "Healthy 🥗" : foodIntake === "skipped_meals" ? "Skipped 🚫" : foodIntake === "fast_food" ? "Sugar/Fast 🍕" : "Unstructured 🍿"}
+                </span>
+              </div>
+              <select
+                value={foodIntake}
+                onChange={(e) => setFoodIntake(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+              >
+                <option value="balanced">Balanced / Healthy Diet 🥗</option>
+                <option value="skipped_meals">Skipped Meals / Fasting 🚫</option>
+                <option value="fast_food">Fast Food / Sugary Diet 🍕</option>
+                <option value="unstructured">Unstructured / Snacking 🍿</option>
+              </select>
+            </div>
+
+          </div>
+
           {/* Reflection Field */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 border-t border-slate-800/80 pt-6">
             <label className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
               <MessageSquare className="h-4 w-4 text-emerald-400" />
               Daily Reflection
             </label>
             <textarea 
               rows={4} 
-              placeholder="Write down any thoughts, feelings, triggers, or things you are grateful for today..." 
+              placeholder="Write down any thoughts, triggers, accomplishments, or reflections on your physical and mental wellness today..." 
               value={reflection} 
               onChange={(e) => setReflection(e.target.value)} 
               className="w-full bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all min-h-[100px] resize-none"
@@ -226,24 +355,40 @@ export default function WellnessPage() {
               return (
                 <div 
                   key={e.id ? String(e.id) : i} 
-                  className="bg-slate-900/30 border border-slate-800/60 rounded-xl p-5 hover:border-emerald-500/20 transition-all duration-300 flex flex-col gap-4 shadow-md"
+                  className="bg-slate-900/30 border border-slate-800/60 rounded-xl p-5 hover:border-emerald-500/20 transition-all duration-300 flex flex-col gap-4 shadow-md text-slate-200"
                 >
                   {/* Date and Header */}
-                  <div className="flex justify-between items-center border-bottom border-slate-800 pb-2">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                     <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5" />
                       {new Date(e.entry_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
 
-                  {/* Metrics Badges */}
-                  <div className="flex gap-2">
+                  {/* Core Metrics Badges */}
+                  <div className="flex gap-2 flex-wrap">
                     <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${itemMood.bg}`}>
                       <span>Mood: {itemMoodVal} {itemMood.emoji}</span>
                     </div>
                     <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${itemAnxiety.bg}`}>
                       <span>Anxiety: {itemAnxietyVal} {itemAnxiety.emoji}</span>
                     </div>
+                  </div>
+
+                  {/* Extended Metrics Badges */}
+                  <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 bg-slate-950/20 border border-slate-850/60 p-2.5 rounded-lg">
+                    {e.metrics.sleep_hours !== undefined && (
+                      <div>🛌 Sleep: <span className="text-slate-200 font-semibold">{e.metrics.sleep_hours} hrs</span></div>
+                    )}
+                    {e.metrics.screen_time !== undefined && (
+                      <div>📱 Screen: <span className="text-slate-200 font-semibold">{e.metrics.screen_time} hrs</span></div>
+                    )}
+                    {e.metrics.water_intake !== undefined && (
+                      <div>💧 Water: <span className="text-slate-200 font-semibold">{e.metrics.water_intake} cups</span></div>
+                    )}
+                    {e.metrics.food_intake !== undefined && (
+                      <div className="col-span-2">🍎 Food: <span className="text-slate-200 font-semibold">{getFoodLabel(e.metrics.food_intake)}</span></div>
+                    )}
                   </div>
 
                   {/* Reflection Blockquote */}

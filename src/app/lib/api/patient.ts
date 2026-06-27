@@ -41,6 +41,9 @@ export interface WellnessEntry {
     sleep_hours?: number;
     energy?: number;
     medication_adherence?: boolean;
+    screen_time?: number;
+    water_intake?: number;
+    food_intake?: string;
   };
   reflection?: string;
 }

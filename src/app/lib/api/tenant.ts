@@ -254,6 +254,14 @@ export const tenantApi = {
     return tenantFetch<{ data: WellnessEntry[] }>(`/patients/${patientId}/wellness${s}`);
   },
 
+  listAllPatientsWellness: (from?: string, to?: string) => {
+    const q = new URLSearchParams();
+    if (from) q.set("from", from);
+    if (to) q.set("to", to);
+    const s = q.toString() ? `?${q}` : "";
+    return tenantFetch<{ data: WellnessEntry[] }>(`/patients/wellness${s}`);
+  },
+
   listAvailability: () =>
     tenantFetch<{ data: V2AvailabilitySlot[] }>("/availability"),
 
@@ -309,8 +317,20 @@ export interface TenantTask {
 }
 
 export interface WellnessEntry {
+  id?: string;
+  patient_id?: string;
   entry_date: string;
-  metrics: Record<string, number | boolean>;
+  metrics: {
+    mood?: number;
+    anxiety?: number;
+    stress?: number;
+    sleep_hours?: number;
+    energy?: number;
+    medication_adherence?: boolean;
+    screen_time?: number;
+    water_intake?: number;
+    food_intake?: string;
+  };
   reflection?: string;
 }
 
