@@ -106,9 +106,9 @@ export default function MessagesPage() {
               {m.sender_role === "patient" && (
                 <span className="inline-flex items-center">
                   {m.read_at ? (
-                    <CheckCheck className="h-3 w-3 text-purple-600" title="Read" />
+                    <span title="Read" className="inline-flex"><CheckCheck className="h-3 w-3 text-purple-600" /></span>
                   ) : (
-                    <Check className="h-3 w-3 text-slate-400" title="Sent" />
+                    <span title="Sent" className="inline-flex"><Check className="h-3 w-3 text-slate-400" /></span>
                   )}
                 </span>
               )}
