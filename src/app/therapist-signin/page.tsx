@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
@@ -13,7 +13,7 @@ import { api, ApiError } from "../lib/api";
 import { storeTherapistAuth } from "../lib/auth/tenant";
 import styles from "./TherapistSignin.module.scss";
 
-export default function TherapistSigninPage() {
+function TherapistSigninForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionExpired = searchParams.get("reason") === "session_expired";
@@ -228,6 +228,14 @@ export default function TherapistSigninPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TherapistSigninPage() {
+  return (
+    <Suspense fallback={null}>
+      <TherapistSigninForm />
+    </Suspense>
   );
 }
 

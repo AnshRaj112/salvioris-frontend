@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { receptionApi } from "../lib/api/reception";
 import { storeReceptionistAuth } from "../lib/auth/receptionist";
 
-export default function ReceptionSigninPage() {
+function ReceptionSigninForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -333,5 +333,13 @@ export default function ReceptionSigninPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ReceptionSigninPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReceptionSigninForm />
+    </Suspense>
   );
 }
