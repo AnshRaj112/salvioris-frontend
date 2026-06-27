@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stethoscope, Receipt, ClipboardList, MessageCircle, Clock } from "lucide-react";
-import { clearTherapistAuth } from "../lib/auth/tenant";
+import { clearTherapistAuth, getTenantId, getAuthToken } from "../lib/auth/tenant";
 import { api, Therapist } from "../lib/api";
+import { tenantApi } from "../lib/api/tenant";
 import { Notification } from "./types";
 import SessionReminder from "../components/SessionReminder";
 import styles from "./TherapistDashboard.module.scss";
@@ -14,7 +15,7 @@ const NAV = [
   { href: "/therapist-dashboard/patients", label: "Patients", icon: Stethoscope },
   { href: "/therapist-dashboard/appointments", label: "Appointments", icon: Calendar },
   { href: "/therapist-dashboard/availability", label: "Working Hours", icon: Clock },
-  { href: "/therapist-dashboard/messages", label: "Messages", icon: MessageCircle },
+  { href: "/therapist-dashboard/messages", label: "Messages", icon: MessageCircle, badgeKey: "messages" as const },
   { href: "/therapist-dashboard/billing", label: "Billing", icon: Receipt },
   { href: "/therapist-dashboard/reception", label: "Reception", icon: ClipboardList },
   { href: "/therapist-dashboard/analytics", label: "Analytics", icon: BarChart3 },
@@ -30,6 +31,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [therapist, setTherapist] = useState<Therapist | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [pendingRequests, setPendingRequests] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const stored = localStorage.getItem("therapist");
@@ -45,6 +47,83 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     api.getNotifications().then((r) => r.success && setNotifications(r.notifications || [])).catch(() => {});
     api.getPendingConnectionRequests().then((r) => r.success && setPendingRequests(r.requests?.length || 0)).catch(() => {});
   }, [router]);
+
+  useEffect(() => {
+    const handleRead = () => {
+      tenantApi.listConversations().then((r) => {
+        const conversations = r.data || [];
+        const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count_therapist || 0), 0);
+        setUnreadMessages(totalUnread);
+      }).catch(() => {});
+    };
+    window.addEventListener("dm-messages-read", handleRead);
+    return () => window.removeEventListener("dm-messages-read", handleRead);
+  }, []);
+
+  useEffect(() => {
+    if (!therapist) return;
+    let ws: WebSocket | null = null;
+    let active = true;
+
+    async function initWS() {
+      try {
+        const tenantId = getTenantId();
+        const token = getAuthToken();
+        if (!tenantId || !token || !active) return;
+
+        const apiHost = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        const wsUrl = apiHost.replace(/^http/, "ws") + `/ws/v1/tenant/${tenantId}/dm?token=${encodeURIComponent(token)}`;
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log("DashboardShell DM WebSocket connected");
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === "message.new") {
+              // Dispatch custom event for the messages page
+              window.dispatchEvent(new CustomEvent("new-dm-message", { detail: data }));
+
+              // Increment badge count if message is from a patient and we are not on messages page
+              if (data.sender_role !== "therapist") {
+                if (window.location.pathname !== "/therapist-dashboard/messages") {
+                  setUnreadMessages((prev) => prev + 1);
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error parsing WebSocket message:", err);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log("DashboardShell DM WebSocket disconnected");
+          if (active) {
+            setTimeout(initWS, 3000);
+          }
+        };
+      } catch (err) {
+        console.error("Failed to initialize DashboardShell DM WebSocket:", err);
+      }
+    }
+
+    initWS();
+
+    // Load initial unread count
+    tenantApi.listConversations().then((r) => {
+      const conversations = r.data || [];
+      const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count_therapist || 0), 0);
+      setUnreadMessages(totalUnread);
+    }).catch(() => {});
+
+    return () => {
+      active = false;
+      if (ws) ws.close();
+    };
+  }, [therapist]);
 
   const handleLogout = () => {
     clearTherapistAuth();
@@ -83,6 +162,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               {label}
               {badgeKey === "requests" && pendingRequests > 0 && (
                 <span className={styles.navBadge}>{pendingRequests}</span>
+              )}
+              {badgeKey === "messages" && unreadMessages > 0 && (
+                <span className={styles.navBadge}>{unreadMessages}</span>
               )}
             </Link>
           ))}

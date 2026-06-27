@@ -326,5 +326,6 @@ export interface DMMessage {
   id: string;
   content: string;
   sender_role: string;
+  read_at?: string | null;
   created_at: string;
 }
