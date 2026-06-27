@@ -118,7 +118,7 @@ export const patientApi = {
 
   listMessages: () => patientFetch<{ data: DMMessage[] }>("/conversation/messages"),
 
-  getConversation: () => patientFetch<{ data: { tenant_id: string; id: string } }>("/conversation"),
+  getConversation: () => patientFetch<{ data: { tenant_id: string; id: string; unread_count_patient?: number } }>("/conversation"),
 
   sendMessage: (content: string) =>
     patientFetch<{ data: DMMessage }>("/conversation/messages", {

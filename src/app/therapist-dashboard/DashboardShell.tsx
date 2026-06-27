@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stethoscope, Receipt, ClipboardList, MessageCircle, Clock, Heart } from "lucide-react";
+import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stethoscope, Receipt, ClipboardList, MessageCircle, Clock, Heart, UserCog } from "lucide-react";
 import { clearTherapistAuth, getTenantId, getAuthToken, isTherapistSessionExpired, renewTherapistSession } from "../lib/auth/tenant";
 import { api, Therapist } from "../lib/api";
 import { tenantApi } from "../lib/api/tenant";
@@ -23,6 +23,7 @@ const NAV = [
   { href: "/therapist-dashboard/referrals", label: "Referrals", icon: Key },
   { href: "/therapist-dashboard/clients", label: "Connected Clients", icon: Users, badgeKey: "requests" as const },
   { href: "/therapist-dashboard/onboarding", label: "Onboard Patients", icon: UserPlus },
+  { href: "/therapist-dashboard/staff", label: "Manage Staff", icon: UserCog },
   { href: "/therapist-dashboard/profile", label: "Clinical Profile", icon: Settings },
 ];
 

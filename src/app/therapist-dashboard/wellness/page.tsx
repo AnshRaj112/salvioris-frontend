@@ -510,7 +510,7 @@ export default function TherapistWellnessPage() {
                         {/* Reflection */}
                         {e.reflection ? (
                           <div className="text-xs italic text-[#6B4C93] border-l-2 border-purple-300 pl-3 py-1 bg-purple-50/50 rounded-r-lg">
-                            "{e.reflection}"
+                            &ldquo;{e.reflection}&rdquo;
                           </div>
                         ) : (
                           <p className="text-xs text-purple-300 italic">No reflection recorded for this day.</p>

@@ -324,7 +324,7 @@ export default function WellnessPage() {
             ) : (
               <>
                 <Sparkles className="h-5 w-5" />
-                <span>Save Today's Entry</span>
+                <span>Save Today&apos;s Entry</span>
               </>
             )}
           </button>
@@ -394,7 +394,7 @@ export default function WellnessPage() {
                   {/* Reflection Blockquote */}
                   {e.reflection ? (
                     <div className="text-xs italic text-slate-300 border-l-2 border-emerald-500/40 pl-3 py-1 bg-slate-950/20 rounded-r-md">
-                      "{e.reflection}"
+                      &ldquo;{e.reflection}&rdquo;
                     </div>
                   ) : (
                     <div className="text-xs text-slate-500 italic pl-1">

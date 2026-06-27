@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 const THERAPIST_PREFIX = "/therapist-dashboard";
 const PATIENT_PREFIX = "/patient-dashboard";
+const RECEPTION_PREFIX = "/reception-dashboard";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -27,9 +28,19 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith(RECEPTION_PREFIX)) {
+    const hasSession = request.cookies.get("receptionist_session")?.value;
+    if (!hasSession) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/reception-signin";
+      url.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/therapist-dashboard/:path*", "/patient-dashboard/:path*"],
+  matcher: ["/therapist-dashboard/:path*", "/patient-dashboard/:path*", "/reception-dashboard/:path*"],
 };

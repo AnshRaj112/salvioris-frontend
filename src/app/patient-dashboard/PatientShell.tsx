@@ -59,7 +59,7 @@ export default function PatientShell({ children }: { children: React.ReactNode }
 
     // Load initial unread count
     patientApi.getConversation().then((res) => {
-      const unread = (res.data as any)?.unread_count_patient || 0;
+      const unread = res.data?.unread_count_patient || 0;
       setUnreadMessages(unread);
     }).catch(() => {});
   }, [user]);
@@ -67,7 +67,7 @@ export default function PatientShell({ children }: { children: React.ReactNode }
   useEffect(() => {
     const handleRead = () => {
       patientApi.getConversation().then((res) => {
-        const unread = (res.data as any)?.unread_count_patient || 0;
+        const unread = res.data?.unread_count_patient || 0;
         setUnreadMessages(unread);
       }).catch(() => {});
     };

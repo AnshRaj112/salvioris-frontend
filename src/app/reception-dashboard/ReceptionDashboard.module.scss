@@ -1,0 +1,200 @@
+// Reception Dashboard Shell Styles
+.dashboardPage {
+  min-height: 100vh;
+  background: #0a0a0f;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.header {
+  height: 64px;
+  background: rgba(12, 12, 22, 0.95);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 rgba(99,102,241,0.08);
+}
+
+.brandWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoIcon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+}
+
+.brandName {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #818cf8;
+  background: rgba(99,102,241,0.15);
+  border: 1px solid rgba(99,102,241,0.3);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.receptionistName {
+  font-size: 13px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.signOutButton {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.18);
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.signOutButton:hover {
+  color: #e2e8f0;
+  background: rgba(99,102,241,0.18);
+  border-color: rgba(99,102,241,0.35);
+}
+
+/* ── Main Layout ─────────────────────────────────────────────────────────── */
+.mainContainer {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  background: rgba(10, 10, 18, 0.97);
+  border-right: 1px solid rgba(99,102,241,0.12);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.navButton:hover {
+  background: rgba(99,102,241,0.08);
+  color: #c4b5fd;
+}
+
+.navButton.active {
+  background: rgba(99,102,241,0.15);
+  color: #818cf8;
+  font-weight: 600;
+}
+
+.navButton.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 0 2px 2px 0;
+}
+
+.sectionDivider {
+  height: 1px;
+  background: rgba(99,102,241,0.1);
+  margin: 8px 0;
+}
+
+.sectionLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #334155;
+  padding: 8px 12px 4px;
+}
+
+.infoCard {
+  margin-top: auto;
+  padding: 14px;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.14);
+  border-radius: 12px;
+}
+
+.infoHeader {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.infoText {
+  font-size: 10px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+/* ── Workspace ───────────────────────────────────────────────────────────── */
+.workspace {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px;
+  background: #0d0d1a;
+}
