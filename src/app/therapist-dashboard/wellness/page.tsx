@@ -29,24 +29,24 @@ import {
 /* ─── helpers ─────────────────────────────────────────────── */
 function moodState(v: number) {
   if (v <= 2) return { emoji: "😢", label: "Very Low", pill: "bg-blue-100 text-blue-700 border-blue-200", bar: "bg-blue-400" };
-  if (v <= 4) return { emoji: "🙁", label: "Low",      pill: "bg-cyan-100  text-cyan-700  border-cyan-200",  bar: "bg-cyan-400"  };
-  if (v <= 6) return { emoji: "😐", label: "Neutral",  pill: "bg-amber-100 text-amber-700 border-amber-200", bar: "bg-amber-400" };
-  if (v <= 8) return { emoji: "🙂", label: "Good",     pill: "bg-emerald-100 text-emerald-700 border-emerald-200", bar: "bg-emerald-400" };
-  return              { emoji: "😁", label: "Excellent",pill: "bg-green-100  text-green-700  border-green-200",  bar: "bg-green-400"  };
+  if (v <= 4) return { emoji: "🙁", label: "Low", pill: "bg-cyan-100  text-cyan-700  border-cyan-200", bar: "bg-cyan-400" };
+  if (v <= 6) return { emoji: "😐", label: "Neutral", pill: "bg-amber-100 text-amber-700 border-amber-200", bar: "bg-amber-400" };
+  if (v <= 8) return { emoji: "🙂", label: "Good", pill: "bg-emerald-100 text-emerald-700 border-emerald-200", bar: "bg-emerald-400" };
+  return { emoji: "😁", label: "Excellent", pill: "bg-green-100  text-green-700  border-green-200", bar: "bg-green-400" };
 }
 
 function anxietyState(v: number) {
-  if (v <= 2) return { emoji: "😌", label: "Calm",     pill: "bg-green-100 text-green-700 border-green-200",   bar: "bg-green-400" };
-  if (v <= 4) return { emoji: "🙂", label: "Mild",     pill: "bg-emerald-100 text-emerald-700 border-emerald-200", bar: "bg-emerald-400" };
-  if (v <= 6) return { emoji: "😐", label: "Moderate", pill: "bg-amber-100 text-amber-700 border-amber-200",   bar: "bg-amber-400" };
-  if (v <= 8) return { emoji: "😰", label: "High",     pill: "bg-orange-100 text-orange-700 border-orange-200",bar: "bg-orange-400" };
-  return              { emoji: "😱", label: "Severe",   pill: "bg-red-100   text-red-700   border-red-200",     bar: "bg-red-500"   };
+  if (v <= 2) return { emoji: "😌", label: "Calm", pill: "bg-green-100 text-green-700 border-green-200", bar: "bg-green-400" };
+  if (v <= 4) return { emoji: "🙂", label: "Mild", pill: "bg-emerald-100 text-emerald-700 border-emerald-200", bar: "bg-emerald-400" };
+  if (v <= 6) return { emoji: "😐", label: "Moderate", pill: "bg-amber-100 text-amber-700 border-amber-200", bar: "bg-amber-400" };
+  if (v <= 8) return { emoji: "😰", label: "High", pill: "bg-orange-100 text-orange-700 border-orange-200", bar: "bg-orange-400" };
+  return { emoji: "😱", label: "Severe", pill: "bg-red-100   text-red-700   border-red-200", bar: "bg-red-500" };
 }
 
 function foodLabel(v?: string) {
-  if (v === "balanced")     return "Balanced 🥗";
+  if (v === "balanced") return "Balanced 🥗";
   if (v === "skipped_meals") return "Skipped Meals 🚫";
-  if (v === "fast_food")    return "Fast / Sugary 🍕";
+  if (v === "fast_food") return "Fast / Sugary 🍕";
   if (v === "unstructured") return "Unstructured 🍿";
   return v ?? "—";
 }
@@ -87,12 +87,12 @@ function Sparkline({ values, color }: { values: (number | undefined)[]; color: s
 
 /* ─── main component ───────────────────────────────────────── */
 export default function TherapistWellnessPage() {
-  const [patients, setPatients]     = useState<V2Patient[]>([]);
+  const [patients, setPatients] = useState<V2Patient[]>([]);
   const [allEntries, setAllEntries] = useState<WellnessEntry[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
-  const [search, setSearch]         = useState("");
-  const [selected, setSelected]     = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -140,10 +140,10 @@ export default function TherapistWellnessPage() {
       )
       .sort((a, b) => {
         const latest = (pid: string) => entriesByPatient.get(pid)?.[0];
-        const score  = (e?: WellnessEntry) => {
+        const score = (e?: WellnessEntry) => {
           if (!e) return 0;
           let s = 0;
-          if ((e.metrics.mood    ?? 5) <= 3) s += 2;
+          if ((e.metrics.mood ?? 5) <= 3) s += 2;
           if ((e.metrics.anxiety ?? 5) >= 8) s += 2;
           return s;
         };
@@ -152,15 +152,15 @@ export default function TherapistWellnessPage() {
   }, [patients, entriesByPatient, search]);
 
   const selectedEntries = selected ? (entriesByPatient.get(selected) ?? []) : [];
-  const selectedPatient  = selected ? patientMap.get(selected)  : null;
+  const selectedPatient = selected ? patientMap.get(selected) : null;
 
   /* summary stats for selected patient */
   const stats = useMemo(() => {
-    const moods     = selectedEntries.map((e) => e.metrics.mood);
+    const moods = selectedEntries.map((e) => e.metrics.mood);
     const anxieties = selectedEntries.map((e) => e.metrics.anxiety);
-    const sleeps    = selectedEntries.map((e) => e.metrics.sleep_hours);
-    const screens   = selectedEntries.map((e) => e.metrics.screen_time);
-    const waters    = selectedEntries.map((e) => e.metrics.water_intake);
+    const sleeps = selectedEntries.map((e) => e.metrics.sleep_hours);
+    const screens = selectedEntries.map((e) => e.metrics.screen_time);
+    const waters = selectedEntries.map((e) => e.metrics.water_intake);
     return { moods, anxieties, sleeps, screens, waters };
   }, [selectedEntries]);
 
@@ -218,24 +218,22 @@ export default function TherapistWellnessPage() {
           ) : (
             filteredPatients.map((p) => {
               const latest = entriesByPatient.get(p.id)?.[0];
-              const hasLowMood = (latest?.metrics.mood    ?? 5) <= 3;
+              const hasLowMood = (latest?.metrics.mood ?? 5) <= 3;
               const hasHighAnx = (latest?.metrics.anxiety ?? 5) >= 8;
-              const isAlert    = hasLowMood || hasHighAnx;
-              const isActive   = selected === p.id;
+              const isAlert = hasLowMood || hasHighAnx;
+              const isActive = selected === p.id;
 
               return (
                 <button
                   key={p.id}
                   onClick={() => setSelected(p.id)}
-                  className={`w-full text-left rounded-xl px-3 py-2.5 border transition-all duration-200 flex items-center gap-2.5 group ${
-                    isActive
+                  className={`w-full text-left rounded-xl px-3 py-2.5 border transition-all duration-200 flex items-center gap-2.5 group ${isActive
                       ? "bg-[#6B4C93] text-white border-[#6B4C93] shadow-md"
                       : "bg-white text-[#3b2055] border-purple-100 hover:border-purple-300 hover:bg-purple-50"
-                  }`}
+                    }`}
                 >
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-                    isActive ? "bg-white/20 text-white" : "bg-purple-100 text-[#6B4C93]"
-                  }`}>
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${isActive ? "bg-white/20 text-white" : "bg-purple-100 text-[#6B4C93]"
+                    }`}>
                     {p.full_name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -362,12 +360,12 @@ export default function TherapistWellnessPage() {
                 ].map((stat) => {
                   const trendColor =
                     stat.t === "flat" ? "text-gray-400"
-                    : stat.t === stat.good ? "text-emerald-500"
-                    : "text-red-500";
+                      : stat.t === stat.good ? "text-emerald-500"
+                        : "text-red-500";
                   const TrendIcon =
-                    stat.t === "up"   ? TrendingUp
-                    : stat.t === "down" ? TrendingDown
-                    : Minus;
+                    stat.t === "up" ? TrendingUp
+                      : stat.t === "down" ? TrendingDown
+                        : Minus;
 
                   return (
                     <div key={stat.label} className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-4 flex flex-col gap-2 shadow-sm">
@@ -405,9 +403,8 @@ export default function TherapistWellnessPage() {
                     return (
                       <div
                         key={e.id ?? i}
-                        className={`bg-white/80 backdrop-blur-sm border rounded-2xl p-5 shadow-sm transition-all hover:shadow-md ${
-                          isCritical ? "border-red-200" : "border-purple-100"
-                        }`}
+                        className={`bg-white/80 backdrop-blur-sm border rounded-2xl p-5 shadow-sm transition-all hover:shadow-md ${isCritical ? "border-red-200" : "border-purple-100"
+                          }`}
                       >
                         {/* date + critical flag */}
                         <div className="flex justify-between items-center mb-4 flex-wrap gap-2">

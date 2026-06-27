@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -15,6 +15,8 @@ import styles from "./TherapistSignin.module.scss";
 
 export default function TherapistSigninPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionExpired = searchParams.get("reason") === "session_expired";
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -128,6 +130,22 @@ export default function TherapistSigninPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className={styles.form}>
+                  {sessionExpired && (
+                    <div
+                      style={{
+                        color: "#92400e",
+                        marginBottom: "1rem",
+                        padding: "0.75rem 1rem",
+                        backgroundColor: "#fef3c7",
+                        border: "1px solid #f59e0b",
+                        borderRadius: "8px",
+                        fontSize: "0.875rem",
+                        fontWeight: 500,
+                      }}
+                    >
+                      ⏱️ Your session has expired after 7 days. Please sign in again to continue.
+                    </div>
+                  )}
                   {error && (
                     <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee', borderRadius: '4px' }}>
                       {error}

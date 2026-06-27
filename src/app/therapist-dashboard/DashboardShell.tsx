@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Key, Users, Settings, Shield, Bell, UserPlus, Calendar, BarChart3, Stethoscope, Receipt, ClipboardList, MessageCircle, Clock, Heart } from "lucide-react";
-import { clearTherapistAuth, getTenantId, getAuthToken } from "../lib/auth/tenant";
+import { clearTherapistAuth, getTenantId, getAuthToken, isTherapistSessionExpired, renewTherapistSession } from "../lib/auth/tenant";
 import { api, Therapist } from "../lib/api";
 import { tenantApi } from "../lib/api/tenant";
 import { Notification } from "./types";
@@ -35,6 +35,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
+    // Graceful pre-expiry check — redirect BEFORE the cookie disappears
+    if (isTherapistSessionExpired()) {
+      clearTherapistAuth();
+      router.push("/therapist-signin?reason=session_expired");
+      return;
+    }
     const stored = localStorage.getItem("therapist");
     if (!stored) {
       router.push("/therapist-signin");
@@ -44,9 +50,23 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       setTherapist(JSON.parse(stored) as Therapist);
     } catch {
       router.push("/therapist-signin");
+      return;
     }
+    // Sliding window — every visit extends the session 7 days from now
+    renewTherapistSession();
     api.getNotifications().then((r) => r.success && setNotifications(r.notifications || [])).catch(() => {});
     api.getPendingConnectionRequests().then((r) => r.success && setPendingRequests(r.requests?.length || 0)).catch(() => {});
+
+    // Periodic expiry check every 60 seconds while the tab is open
+    const expiryInterval = setInterval(() => {
+      if (isTherapistSessionExpired()) {
+        clearInterval(expiryInterval);
+        clearTherapistAuth();
+        router.push("/therapist-signin?reason=session_expired");
+      }
+    }, 60_000);
+
+    return () => clearInterval(expiryInterval);
   }, [router]);
 
   useEffect(() => {

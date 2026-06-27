@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Heart, Calendar, Pill, CheckSquare, MessageCircle, Receipt, Home, LogOut, BookOpen } from "lucide-react";
-import { clearPatientAuth, getPatientUser, getPatientToken } from "../lib/auth/patient";
+import { clearPatientAuth, getPatientUser, getPatientToken, isPatientSessionExpired, renewPatientSession } from "../lib/auth/patient";
 import { patientApi } from "../lib/api/patient";
 import SessionReminder from "../components/SessionReminder";
 import styles from "./PatientDashboard.module.scss";
@@ -27,12 +27,31 @@ export default function PatientShell({ children }: { children: React.ReactNode }
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
+    // Graceful pre-expiry check — redirect BEFORE cookie disappears
+    if (isPatientSessionExpired()) {
+      clearPatientAuth();
+      router.push("/signin?reason=session_expired");
+      return;
+    }
     const u = getPatientUser();
     if (!u) {
       router.push("/signin?redirect=/patient-dashboard");
       return;
     }
+    // Sliding window — every visit extends the session 7 days from now
+    renewPatientSession();
     setUser(u);
+
+    // Periodic expiry check every 60 seconds while the tab is open
+    const expiryInterval = setInterval(() => {
+      if (isPatientSessionExpired()) {
+        clearInterval(expiryInterval);
+        clearPatientAuth();
+        router.push("/signin?reason=session_expired");
+      }
+    }, 60_000);
+
+    return () => clearInterval(expiryInterval);
   }, [router]);
 
   useEffect(() => {
