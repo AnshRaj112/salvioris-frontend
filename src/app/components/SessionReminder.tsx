@@ -36,9 +36,14 @@ export default function SessionReminder({ role }: SessionReminderProps) {
     }
   }, [role]);
 
-  // 2. Periodic appointment check (every 30 seconds)
+  // 2. Smart appointment scheduler — fetches once, then wakes up exactly when needed
   useEffect(() => {
-    const checkUpcomingAppointments = async () => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let active = true;
+
+    const scheduleNextCheck = async () => {
+      if (!active) return;
+
       try {
         let appointments: SimplifiedAppointment[] = [];
 
@@ -48,7 +53,7 @@ export default function SessionReminder({ role }: SessionReminderProps) {
             id: a.id,
             type: a.type,
             starts_at: a.starts_at,
-            meeting_link: a.meeting_link
+            meeting_link: a.meeting_link,
           }));
         } else {
           const res = await tenantApi.listAppointments();
@@ -57,46 +62,61 @@ export default function SessionReminder({ role }: SessionReminderProps) {
             type: a.type,
             starts_at: a.starts_at,
             meeting_link: a.meeting_link,
-            patient_id: a.patient_id
+            patient_id: a.patient_id,
           }));
         }
 
         const now = Date.now();
         const FIVE_MIN_MS = 5 * 60 * 1000;
 
-        // Find an appointment starting in 5 minutes
-        const upcoming = appointments.find((apt) => {
-          const startTime = new Date(apt.starts_at).getTime();
-          const diff = startTime - now;
-
-          // Check if starts in 0 to 5 minutes
+        // Check if any appointment is already within the alert window
+        const inWindow = appointments.find((apt) => {
+          const diff = new Date(apt.starts_at).getTime() - now;
           if (diff > 0 && diff <= FIVE_MIN_MS) {
-            // Check if already notified/dismissed in this session
-            const notified = sessionStorage.getItem(`alerted_apt_${apt.id}`);
-            return !notified;
+            return !sessionStorage.getItem(`alerted_apt_${apt.id}`);
           }
           return false;
         });
 
-        if (upcoming) {
-          // If we found an upcoming appointment, retrieve patient name if therapist
-          if (role === "therapist" && upcoming.patient_id) {
-            const p = patientsRef.current.find(pat => pat.id === upcoming.patient_id);
-            setPatientName(p ? p.full_name : upcoming.patient_id.slice(0, 8));
+        if (inWindow) {
+          if (role === "therapist" && inWindow.patient_id) {
+            const p = patientsRef.current.find(pat => pat.id === inWindow.patient_id);
+            setPatientName(p ? p.full_name : inWindow.patient_id.slice(0, 8));
           }
-          setActiveApt(upcoming);
+          setActiveApt(inWindow);
+          // Already in window — no need to reschedule until dismissed
+          return;
+        }
+
+        // Find the soonest future appointment not yet dismissed
+        const future = appointments
+          .map(apt => ({ apt, diff: new Date(apt.starts_at).getTime() - now }))
+          .filter(({ apt, diff }) => diff > FIVE_MIN_MS && !sessionStorage.getItem(`alerted_apt_${apt.id}`))
+          .sort((a, b) => a.diff - b.diff);
+
+        if (future.length > 0) {
+          // Wake up exactly when the nearest appointment enters the 5-min window
+          const wakeInMs = future[0].diff - FIVE_MIN_MS;
+          timeoutId = setTimeout(scheduleNextCheck, Math.max(wakeInMs, 1000));
+        } else {
+          // No upcoming appointments — check again in 5 minutes (low-frequency fallback)
+          timeoutId = setTimeout(scheduleNextCheck, 5 * 60 * 1000);
         }
       } catch (err) {
         console.error("Failed to fetch appointments for pre-session check:", err);
+        // On error, retry in 2 minutes
+        if (active) {
+          timeoutId = setTimeout(scheduleNextCheck, 2 * 60 * 1000);
+        }
       }
     };
 
-    // Check immediately on mount, then every 30s
-    checkUpcomingAppointments();
-    const pollInterval = setInterval(checkUpcomingAppointments, 30000);
+    // Kick off immediately on mount
+    scheduleNextCheck();
 
     return () => {
-      clearInterval(pollInterval);
+      active = false;
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [role]);
 
