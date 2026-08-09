@@ -78,8 +78,10 @@ export function useSecureChat(
   useEffect(() => {
     if (!keyring || !sessionToken || !activeGroupId) return;
 
-    // Connect to updated secure WSS gateway
-    const gatewayUrl = `ws://localhost:8080/api/chat/ws?token=${sessionToken}`;
+    const apiHost = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+    const wsProtocol = apiHost.startsWith("https") ? "wss" : "ws";
+    const wsHost = apiHost.replace(/^https?:\/\//, "");
+    const gatewayUrl = `${wsProtocol}://${wsHost}/api/chat/ws?token=${sessionToken}`;
     const ws = new WebSocket(gatewayUrl);
     wsRef.current = ws;
 
@@ -260,7 +262,8 @@ export function useSecureChat(
     );
 
     // Upload encrypted payload to REST API
-    const response = await fetch('http://localhost:8080/api/reports/submit', {
+    const apiHost = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+    const response = await fetch(`${apiHost}/api/reports/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1128,7 +1128,7 @@ export const api = {
       });
     } catch {
       throw {
-        message: 'Cannot reach the backend API. Make sure the Serenify backend is running on port 8080.',
+        message: 'Cannot reach the backend API. Make sure the Serenify backend is running.',
         status: 0,
       } as ApiError;
     }
